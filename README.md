@@ -1,1 +1,1 @@
-# English-teacher-bot
+# English teacher bot
