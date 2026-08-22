@@ -44,12 +44,13 @@ const adminMenu = {
   }
 };
 
-// DB TABLE CREATER
+// DB TABLE CREATER (Ayrı-ayrılıqda icra olunur)
 async function initDatabase() {
   try {
     console.log('Cədvəllər yoxlanılır...');
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
+    
+    const tables = [
+      `CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
         telegram_id BIGINT NOT NULL UNIQUE,
         username VARCHAR(255),
@@ -60,15 +61,15 @@ async function initDatabase() {
         last_active_date DATE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      );
-      CREATE TABLE IF NOT EXISTS words (
+      )`,
+      `CREATE TABLE IF NOT EXISTS words (
         id INT AUTO_INCREMENT PRIMARY KEY,
         word VARCHAR(255) NOT NULL,
         level ENUM('A1','A2','B1','B2','C1') NOT NULL,
         category VARCHAR(100) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      CREATE TABLE IF NOT EXISTS rules (
+      )`,
+      `CREATE TABLE IF NOT EXISTS rules (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(500) NOT NULL,
         content TEXT NOT NULL,
@@ -77,8 +78,8 @@ async function initDatabase() {
         category VARCHAR(100) DEFAULT 'grammar',
         sequence_number INT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      CREATE TABLE IF NOT EXISTS questions (
+      )`,
+      `CREATE TABLE IF NOT EXISTS questions (
         id INT AUTO_INCREMENT PRIMARY KEY,
         type ENUM('word_quiz','rule_quiz','general') NOT NULL,
         question_text TEXT NOT NULL,
@@ -89,16 +90,16 @@ async function initDatabase() {
         category VARCHAR(100),
         related_id INT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      CREATE TABLE IF NOT EXISTS favorites (
+      )`,
+      `CREATE TABLE IF NOT EXISTS favorites (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id BIGINT NOT NULL,
         element_type ENUM('word','rule') NOT NULL,
         element_id INT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uniq_fav (user_id, element_type, element_id)
-      );
-      CREATE TABLE IF NOT EXISTS wrong_answers (
+      )`,
+      `CREATE TABLE IF NOT EXISTS wrong_answers (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id BIGINT NOT NULL,
         question_id INT NOT NULL,
@@ -109,43 +110,48 @@ async function initDatabase() {
         explanation TEXT,
         reviewed BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-      CREATE TABLE IF NOT EXISTS achievements (
+      )`,
+      `CREATE TABLE IF NOT EXISTS achievements (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id BIGINT NOT NULL,
         achievement_name VARCHAR(255) NOT NULL,
         achieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uniq_ach (user_id, achievement_name)
-      );
-      CREATE TABLE IF NOT EXISTS daily_stats (
+      )`,
+      `CREATE TABLE IF NOT EXISTS daily_stats (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id BIGINT NOT NULL,
         stat_date DATE NOT NULL,
         questions_answered INT DEFAULT 0,
         correct_count INT DEFAULT 0,
         UNIQUE KEY uniq_daily (user_id, stat_date)
-      );
-      CREATE TABLE IF NOT EXISTS user_rule_progress (
+      )`,
+      `CREATE TABLE IF NOT EXISTS user_rule_progress (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id BIGINT NOT NULL,
         rule_id INT NOT NULL,
         read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE KEY uniq_progress (user_id, rule_id)
-      );
-      CREATE TABLE IF NOT EXISTS user_states (
+      )`,
+      `CREATE TABLE IF NOT EXISTS user_states (
         user_id BIGINT PRIMARY KEY,
         state VARCHAR(50) DEFAULT 'idle',
         state_data JSON,
         last_bot_message_id INT,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      );
-      CREATE TABLE IF NOT EXISTS user_last_messages (
+      )`,
+      `CREATE TABLE IF NOT EXISTS user_last_messages (
         user_id BIGINT PRIMARY KEY,
         message_text TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-      );
-    `);
-    console.log('Cədvəllər uğurla yaradıldı (və artıq mövcuddur).');
+      )`
+    ];
+
+    for (const sql of tables) {
+      await pool.query(sql);
+    }
+    
+    console.log('Bütün cədvəllər uğurla yaradıldı (və artıq mövcuddur).');
   } catch (err) {
     console.error('Cədvəl yaradılarkən xəta:', err.message);
   }
