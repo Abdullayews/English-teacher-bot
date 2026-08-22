@@ -39,7 +39,7 @@ const adminMenu = {
     keyboard: [
       ['➕ Söz Əlavə Et', '➕ Qayda Əlavə Et'],
       ['➕ Sual Əlavə Et', '📈 Bot Statistikası'],
-      ['🏠 Ana Menyu']
+      ['❌ Ləğv Et', '🏠 Ana Menyu']
     ], resize_keyboard: true
   }
 };
@@ -123,17 +123,12 @@ async function checkAndGrantAchievement(userId, achievementName, chatId) {
   } catch (e) { console.error(e); }
 }
 
-// SEED RUNNER
+// SEED RUNNER (Artıq databaza boş olsa da, dolu olsa da yeniləyəcək)
 async function runInitialSeed() {
   try {
-    const [rows] = await pool.query('SELECT COUNT(*) as count FROM words');
-    if (rows[0].count === 0) {
-      console.log('Database boşdur, Seed prosesi başlayır...');
-      execSync('node seed.js', { stdio: 'inherit' });
-      console.log('Seed prosesi uğurla tamamlandı!');
-    } else {
-      console.log(`Database-də artıq ${rows[0].count} söz var. Seedə ehtiyac yoxdur.`);
-    }
+    console.log('Seed yoxlanılır və yeni məlumatlar əlavə edilir...');
+    execSync('node seed.js', { stdio: 'inherit' });
+    console.log('Seed prosesi uğurla tamamlandı!');
   } catch (err) {
     console.error('Seed zamanı xəta:', err.message);
   }
@@ -220,6 +215,12 @@ bot.on('message', async (msg) => {
     let userState = await getUserState(userId);
     const stateData = safeParse(userState.state_data);
     
+    // LƏĞV ET DÜYMƏSİ
+    if (text === '❌ Ləğv Et') {
+      await setUserState(userId, 'idle');
+      return bot.sendMessage(chatId, 'Proses ləğv edildi. Əsas menyu:', mainMenu);
+    }
+
     // ADMIN COMMANDS
     if (userId === ADMIN_ID && text === '/admin') {
       await setUserState(userId, 'idle');
@@ -414,15 +415,24 @@ bot.on('message', async (msg) => {
         const [lastMsgRow] = await pool.query('SELECT message_text FROM user_last_messages WHERE user_id = ?', [userId]);
         if (!lastMsgRow || lastMsgRow.length === 0) return bot.sendMessage(chatId, 'Heç bir mesaj yoxdur ki, izah edim. Əvvəlcə bir söz öyrənin.', mainMenu);
         
-        // Gemini 3.5 Flash modeli istifadə olunur
-        const prompt = `Sən ingilis dili müəllimisisən. Aşağıdakı mesajı Azərbaycan dilində (latın əlifbası ilə) sadə və aydın şəkildə izah et. Qrammatika, söz ehtiyatı və çətin nöqtələri açıqla.\n\nMesaj: ${lastMsgRow[0].message_text}`;
-        const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
+        // Gemini Flash Lite - Modern və oxunaqlı format üçün yenilənmiş prompt
+        const prompt = `Sən ingilis dili müəllimisisən. Aşağıdakı mesajı Azərbaycan dilində (latın əlifbası ilə) izah et. 
+        Qaydalar:
+        1. Çox uzatma, maksimum 4-5 qısa abzas yaz.
+        2. Markdown simvollarından (*, #) istifadə etmə.
+        3. Əvəzinə sadə HTML tagları istifadə et: <b>mətn</b> (qalın), <i>mətn</i> (italik).
+        4. Hər bölməni emoji ilə başlat (məsələn: 📖, 💡, ✍️, 📝).
+        5. Yazı stili modern, aydın və teleqram üçün uyğun olsun.
+        
+        Mesaj: ${lastMsgRow[0].message_text}`;
+        
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
         
         await bot.sendMessage(chatId, '🤖 AI düşünür...');
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
         
-        return bot.sendMessage(chatId, responseText, mainMenu);
+        return bot.sendMessage(chatId, responseText, { parse_mode: 'HTML', reply_markup: mainMenu.reply_markup });
       } catch (aiError) {
         console.error("AI Xətası:", aiError.message);
         return bot.sendMessage(chatId, '🤖 AI izah edərkən xəta baş verdi. API açarını yoxlayın.', mainMenu);
@@ -446,20 +456,15 @@ bot.on('message', async (msg) => {
     // ADMIN SIMPLE MENUS
     if (userId === ADMIN_ID && text === '➕ Söz Əlavə Et') {
       await setUserState(userId, 'admin_add_word');
-      return bot.sendMessage(chatId, 'Format: söz | səviyyə | kateqoriya\nMəsələn: apple | A1 | food');
+      return bot.sendMessage(chatId, 'Format: söz | səviyyə | kateqoriya\nMəsələn: apple | A1 | food', adminMenu);
     }
     if (userId === ADMIN_ID && text === '➕ Qayda Əlavə Et') {
       await setUserState(userId, 'admin_add_rule_step1', {});
-      return bot.sendMessage(chatId, 'Qaydanın başlığını daxil edin:');
+      return bot.sendMessage(chatId, 'Qaydanın başlığını daxil edin:', adminMenu);
     }
     if (userId === ADMIN_ID && text === '➕ Sual Əlavə Et') {
       await setUserState(userId, 'admin_add_question_step1', {});
-      return bot.sendMessage(chatId, 'Sual tipini seçin:', {
-        reply_markup: { inline_keyboard: [
-          [{text: 'Söz Quiz', callback_data: 'aq_type_word_quiz'}, {text: 'Qayda Quiz', callback_data: 'aq_type_rule_quiz'}],
-          [{text: 'Ümumi', callback_data: 'aq_type_general'}]
-        ]}
-      });
+      return bot.sendMessage(chatId, 'Sual tipini seçin:', adminMenu);
     }
     if (userId === ADMIN_ID && text === '📈 Bot Statistikası') {
       const [uCount] = await pool.query('SELECT COUNT(*) as c FROM users');
@@ -474,21 +479,21 @@ bot.on('message', async (msg) => {
       if (userState.state === 'admin_add_rule_step1') {
         stateData.title = text;
         await setUserState(userId, 'admin_add_rule_step2', stateData);
-        return bot.sendMessage(chatId, 'Qaydanın məzmununu daxil edin:');
+        return bot.sendMessage(chatId, 'Qaydanın məzmununu daxil edin:', adminMenu);
       }
       if (userState.state === 'admin_add_rule_step2') {
         stateData.content = text;
         await setUserState(userId, 'admin_add_rule_step3', stateData);
-        return bot.sendMessage(chatId, 'Nümunə daxil edin:');
+        return bot.sendMessage(chatId, 'Nümunə daxil edin:', adminMenu);
       }
       if (userState.state === 'admin_add_rule_step3') {
         stateData.example = text;
         await setUserState(userId, 'admin_add_rule_step4', stateData);
-        return bot.sendMessage(chatId, 'Səviyyə seçin (A1, A2, B1, B2, C1):');
+        return bot.sendMessage(chatId, 'Səviyyə seçin (A1, A2, B1, B2, C1):', adminMenu);
       }
       if (userState.state === 'admin_add_rule_step4') {
         const lvl = text.toUpperCase().trim();
-        if (!['A1','A2','B1','B2','C1'].includes(lvl)) return bot.sendMessage(chatId, 'Yalnız A1, A2, B1, B2, C1 ola bilər.');
+        if (!['A1','A2','B1','B2','C1'].includes(lvl)) return bot.sendMessage(chatId, 'Yalnız A1, A2, B1, B2, C1 ola bilər.', adminMenu);
         const [seqRes] = await pool.query('SELECT COALESCE(MAX(sequence_number), 0) + 1 as next_seq FROM rules WHERE level = ?', [lvl]);
         await pool.query('INSERT INTO rules (title, content, example, level, sequence_number) VALUES (?, ?, ?, ?, ?)', 
           [stateData.title, stateData.content, stateData.example, lvl, seqRes[0].next_seq]);
@@ -695,7 +700,7 @@ bot.on('callback_query', async (query) => {
       const type = data.replace('aq_type_', '');
       stateData.type = type;
       await setUserState(userId, 'admin_add_question_step2', stateData);
-      return bot.sendMessage(chatId, 'Sual mətnini daxil edin:', mainMenu);
+      return bot.sendMessage(chatId, 'Sual mətnini daxil edin:', adminMenu);
     }
 
   } catch (err) {
