@@ -288,7 +288,7 @@ bot.on('message', async (msg) => {
       if (!lastMsgRow || lastMsgRow.length === 0) return bot.sendMessage(chatId, 'Heç bir mesaj yoxdur ki, izah edim.');
       
       const prompt = `Sən ingilis dili müəllimisisən. Aşağıdakı mesajı Azərbaycan dilində (latın əlifbası ilə) sadə və aydın şəkildə izah et. Qrammatika, söz ehtiyatı və çətin nöqtələri açıqla.\n\nMesaj: ${lastMsgRow[0].message_text}`;
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
       const result = await model.generateContent(prompt);
       return bot.sendMessage(chatId, result.response.text(), mainMenu);
     }
