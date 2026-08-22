@@ -221,12 +221,36 @@ bot.on('callback_query', async (query) => {
   }
 });
 
+// Bot birinci dəfə başlayanda avtomatik seed etmək üçün
+import { execSync } from 'child_process';
+
+async function runInitialSeed() {
+  try {
+    // Databazada söz varsa, seed etməyə ehtiyac yoxdur
+    const [rows] = await pool.query('SELECT COUNT(*) as count FROM words');
+    if (rows[0].count === 0) {
+      console.log('Database boşdur, Seed prosesi başlayır...');
+      execSync('node seed.js', { stdio: 'inherit' });
+      console.log('Seed prosesi uğurla tamamlandı!');
+    } else {
+      console.log(`Database-də artıq ${rows[0].count} söz var. Seedə ehtiyac yoxdur.`);
+    }
+  } catch (err) {
+    console.error('Seed zamanı xəta (cədvəl yoxdursa normaldır):', err.message);
+    // Əgər cədvəllər hələ yaradılmayıbsa, seed.js işləməzdən əvvəl sql cədvəllərini yaratmaq lazımdır.
+  }
+}
+
 // START SERVER
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
-  if (RENDER_URL) {
-    const hookUrl = RENDER_URL + '/webhook';
-    await bot.setWebHook(hookUrl);
-    console.log(`Webhook set to ${hookUrl}`);
+  
+  // Avtomatik seed yoxlanışı
+  await runInitialSeed();
+
+  if (process.env.RENDER_EXTERNAL_URL) {
+    const webhookUrl = process.env.RENDER_EXTERNAL_URL + '/webhook';
+    await bot.setWebHook(webhookUrl);
+    console.log(`Webhook set to ${webhookUrl}`);
   }
 });
