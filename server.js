@@ -150,6 +150,14 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
+// JSON parse helper (TiDB JSON formatlari ucun)
+function safeParse(data) {
+  if (typeof data === 'string') {
+    try { return JSON.parse(data); } catch { return {}; }
+  }
+  return data || {};
+}
+
 // MESSAGE HANDLER
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
@@ -173,7 +181,7 @@ bot.on('message', async (msg) => {
     }
     
     let userState = await getUserState(userId);
-    const stateData = userState.state_data ? JSON.parse(userState.state_data) : {};
+    const stateData = safeParse(userState.state_data);
     
     // ADMIN COMMANDS
     if (userId === ADMIN_ID && text === '/admin') {
@@ -219,10 +227,8 @@ bot.on('message', async (msg) => {
       }
       if (userState.state === 'admin_add_question_step5') {
         stateData.explanation = text;
-        const seqRes = await pool.query('SELECT COALESCE(MAX(sequence_number), 0) + 1 as next_seq FROM rules WHERE level = ?', [stateData.level]);
-        // Insert question
         await pool.query('INSERT INTO questions (type, question_text, options, correct_answer, explanation, level, category) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-          [stateData.type, stateData.question_text, JSON.stringify(stateData.options), stateData.correct_answer, stateData.explanation, stateData.level, 'general']);
+          [stateData.type, stateData.question_text, JSON.stringify(stateData.options), stateData.correct_answer, stateData.explanation, stateData.level || 'A1', 'general']);
         await setUserState(userId, 'idle');
         return bot.sendMessage(chatId, '✅ Sual uğurla əlavə edildi!', adminMenu);
       }
@@ -273,7 +279,7 @@ bot.on('message', async (msg) => {
       const [qs] = await pool.query('SELECT * FROM questions WHERE type = ? AND level = ? ORDER BY RAND() LIMIT 1', [type, user.level]);
       if (qs.length === 0) return bot.sendMessage(chatId, 'Bu səviyyə üçün sual tapılmadı.', mainMenu);
       const q = qs[0];
-      const options = JSON.parse(q.options);
+      const options = safeParse(q.options);
       await setUserState(userId, `quiz_${type}`, { q_id: q.id });
       
       const inlineKeyboard = options.map((opt, idx) => {
@@ -294,7 +300,7 @@ bot.on('message', async (msg) => {
       await setUserState(userId, 'exam', { questions: examQuestions, current_index: 0, score: 0 });
       
       const q = qs[0];
-      const options = JSON.parse(q.options);
+      const options = safeParse(q.options);
       const inlineKeyboard = options.map((opt, idx) => {
         const letter = String.fromCharCode(65 + idx);
         return [{ text: opt, callback_data: `exam_${q.id}_${letter}` }];
@@ -328,9 +334,9 @@ bot.on('message', async (msg) => {
       let str = '⭐ Sizin favoritləriniz:\n\n';
       const inlineKeyboard = [];
       favs.forEach(f => {
-        const text = f.element_type === 'word' ? f.word : f.title;
-        str += `[${f.element_type}] ${text}\n`;
-        inlineKeyboard.push([{ text: `❌ Sil: ${text.substring(0, 15)}`, callback_data: `del_fav_${f.id}` }]);
+        const txt = f.element_type === 'word' ? f.word : f.title;
+        str += `[${f.element_type}] ${txt}\n`;
+        inlineKeyboard.push([{ text: `❌ Sil: ${txt.substring(0, 15)}`, callback_data: `del_fav_${f.id}` }]);
       });
       inlineKeyboard.push([{ text: '🏠 Menyu', callback_data: 'menu' }]);
 
@@ -480,11 +486,6 @@ bot.on('message', async (msg) => {
       }
     }
 
-    if (text === '/start' || text === '🏠 Ana Menyu') {
-       await setUserState(userId, 'idle');
-       return bot.sendMessage(chatId, `👋 Salam, ${user.full_name}!\n\n📊 Səviyyən: ${user.level}\n🏆 Xalın: ${user.score}\n🔥 Streak: ${user.streak} gün`, mainMenu);
-    }
-
     // Default fallback
     bot.sendMessage(chatId, 'Zəhmət olmasa menyudan seçim edin.', mainMenu);
 
@@ -499,9 +500,10 @@ bot.on('callback_query', async (query) => {
   const userId = query.from.id;
   const chatId = query.message.chat.id;
   const data = query.data;
-  let user = (await pool.query('SELECT * FROM users WHERE telegram_id = ?', [userId]))[0][0];
+  const [uRows] = await pool.query('SELECT * FROM users WHERE telegram_id = ?', [userId]);
+  const user = uRows[0];
   let userState = await getUserState(userId);
-  const stateData = userState.state_data ? JSON.parse(userState.state_data) : {};
+  const stateData = safeParse(userState.state_data);
   
   try {
     if (data === 'menu') {
@@ -588,7 +590,7 @@ bot.on('callback_query', async (query) => {
       const [qs] = await pool.query('SELECT * FROM questions WHERE type = ? AND level = ? ORDER BY RAND() LIMIT 1', [type, user.level]);
       if (qs.length === 0) return bot.sendMessage(chatId, 'Sual tapılmadı.', mainMenu);
       const q = qs[0];
-      const options = JSON.parse(q.options);
+      const options = safeParse(q.options);
       await setUserState(userId, `quiz_${type}`, { q_id: q.id });
       const inlineKeyboard = options.map((opt, idx) => {
         const letter = String.fromCharCode(65 + idx);
@@ -635,7 +637,7 @@ bot.on('callback_query', async (query) => {
         await setUserState(userId, 'exam', stateData);
         const [nextQs] = await pool.query('SELECT * FROM questions WHERE id = ?', [stateData.questions[stateData.current_index]]);
         const nq = nextQs[0];
-        const options = JSON.parse(nq.options);
+        const options = safeParse(nq.options);
         const inlineKeyboard = options.map((opt, idx) => {
           const letter = String.fromCharCode(65 + idx);
           return [{ text: opt, callback_data: `exam_${nq.id}_${letter}` }];
