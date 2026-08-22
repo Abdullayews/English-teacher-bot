@@ -3,6 +3,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import cron from 'node-cron';
 import https from 'https';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { execSync } from 'child_process';
 import pool from './db.js';
 
 // CONFIG
@@ -43,6 +44,113 @@ const adminMenu = {
   }
 };
 
+// DB TABLE CREATER
+async function initDatabase() {
+  try {
+    console.log('Cədvəllər yoxlanılır...');
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        telegram_id BIGINT NOT NULL UNIQUE,
+        username VARCHAR(255),
+        full_name VARCHAR(255) NOT NULL,
+        level ENUM('A1','A2','B1','B2','C1') DEFAULT 'A1',
+        score INT DEFAULT 0,
+        streak INT DEFAULT 0,
+        last_active_date DATE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS words (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        word VARCHAR(255) NOT NULL,
+        level ENUM('A1','A2','B1','B2','C1') NOT NULL,
+        category VARCHAR(100) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS rules (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(500) NOT NULL,
+        content TEXT NOT NULL,
+        example TEXT,
+        level ENUM('A1','A2','B1','B2','C1') NOT NULL,
+        category VARCHAR(100) DEFAULT 'grammar',
+        sequence_number INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS questions (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        type ENUM('word_quiz','rule_quiz','general') NOT NULL,
+        question_text TEXT NOT NULL,
+        options JSON NOT NULL,
+        correct_answer VARCHAR(10) NOT NULL,
+        explanation TEXT,
+        level ENUM('A1','A2','B1','B2','C1') NOT NULL,
+        category VARCHAR(100),
+        related_id INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS favorites (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        element_type ENUM('word','rule') NOT NULL,
+        element_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_fav (user_id, element_type, element_id)
+      );
+      CREATE TABLE IF NOT EXISTS wrong_answers (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        question_id INT NOT NULL,
+        question_type ENUM('word_quiz','rule_quiz','general') NOT NULL,
+        question_text TEXT,
+        user_answer VARCHAR(255),
+        correct_answer VARCHAR(255),
+        explanation TEXT,
+        reviewed BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS achievements (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        achievement_name VARCHAR(255) NOT NULL,
+        achieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_ach (user_id, achievement_name)
+      );
+      CREATE TABLE IF NOT EXISTS daily_stats (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        stat_date DATE NOT NULL,
+        questions_answered INT DEFAULT 0,
+        correct_count INT DEFAULT 0,
+        UNIQUE KEY uniq_daily (user_id, stat_date)
+      );
+      CREATE TABLE IF NOT EXISTS user_rule_progress (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        rule_id INT NOT NULL,
+        read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_progress (user_id, rule_id)
+      );
+      CREATE TABLE IF NOT EXISTS user_states (
+        user_id BIGINT PRIMARY KEY,
+        state VARCHAR(50) DEFAULT 'idle',
+        state_data JSON,
+        last_bot_message_id INT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+      CREATE TABLE IF NOT EXISTS user_last_messages (
+        user_id BIGINT PRIMARY KEY,
+        message_text TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+    console.log('Cədvəllər uğurla yaradıldı (və artıq mövcuddur).');
+  } catch (err) {
+    console.error('Cədvəl yaradılarkən xəta:', err.message);
+  }
+}
+
 // DB HELPERS
 async function getUserState(userId) {
   const [rows] = await pool.query('SELECT * FROM user_states WHERE user_id = ?', [userId]);
@@ -80,6 +188,22 @@ async function updateStreak(user) {
   return newStreak;
 }
 
+// SEED RUNNER
+async function runInitialSeed() {
+  try {
+    const [rows] = await pool.query('SELECT COUNT(*) as count FROM words');
+    if (rows[0].count === 0) {
+      console.log('Database boşdur, Seed prosesi başlayır...');
+      execSync('node seed.js', { stdio: 'inherit' });
+      console.log('Seed prosesi uğurla tamamlandı!');
+    } else {
+      console.log(`Database-də artıq ${rows[0].count} söz var. Seedə ehtiyac yoxdur.`);
+    }
+  } catch (err) {
+    console.error('Seed zamanı xəta:', err.message);
+  }
+}
+
 // SELF-PING
 if (RENDER_URL) {
   cron.schedule('*/14 * * * *', () => {
@@ -106,7 +230,6 @@ bot.on('message', async (msg) => {
   const text = msg.text;
   
   try {
-    // User Check / Register
     let [users] = await pool.query('SELECT * FROM users WHERE telegram_id = ?', [userId]);
     let user;
     if (users.length === 0) {
@@ -120,13 +243,11 @@ bot.on('message', async (msg) => {
     
     let userState = await getUserState(userId);
     
-    // ADMIN COMMANDS
     if (userId === ADMIN_ID && text === '/admin') {
       await setUserState(userId, 'idle');
       return bot.sendMessage(chatId, 'Admin Paneli:', adminMenu);
     }
 
-    // ADMIN ADD WORD
     if (userState.state === 'admin_add_word' && userId === ADMIN_ID) {
       const parts = text.split('|').map(p => p.trim());
       if (parts.length === 3) {
@@ -137,7 +258,6 @@ bot.on('message', async (msg) => {
       return bot.sendMessage(chatId, 'Format yanlışdır. Format: söz | səviyyə | kateqoriya');
     }
 
-    // BASIC ROUTING
     if (text === '/start' || text === '🏠 Ana Menyu') {
       await setUserState(userId, 'idle');
       return bot.sendMessage(chatId, `👋 Salam, ${user.full_name}!\n\n📊 Səviyyən: ${user.level}\n🏆 Xalın: ${user.score}\n🔥 Streak: ${user.streak} gün`, mainMenu);
@@ -158,10 +278,10 @@ bot.on('message', async (msg) => {
     }
 
     if (text === '🤖 AI İzah') {
-      const lastMsg = await pool.query('SELECT message_text FROM user_last_messages WHERE user_id = ?', [userId]);
-      if (lastMsg[0].length === 0) return bot.sendMessage(chatId, 'Heç bir mesaj yoxdur ki, izah edim.');
+      const [lastMsgRow] = await pool.query('SELECT message_text FROM user_last_messages WHERE user_id = ?', [userId]);
+      if (!lastMsgRow || lastMsgRow.length === 0) return bot.sendMessage(chatId, 'Heç bir mesaj yoxdur ki, izah edim.');
       
-      const prompt = `Sən ingilis dili müəllimisisən. Aşağıdakı mesajı Azərbaycan dilində (latın əlifbası ilə) sadə və aydın şəkildə izah et. Qrammatika, söz ehtiyatı və çətin nöqtələri açıqla.\n\nMesaj: ${lastMsg[0][0].message_text}`;
+      const prompt = `Sən ingilis dili müəllimisisən. Aşağıdakı mesajı Azərbaycan dilində (latın əlifbası ilə) sadə və aydın şəkildə izah et. Qrammatika, söz ehtiyatı və çətin nöqtələri açıqla.\n\nMesaj: ${lastMsgRow[0].message_text}`;
       const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
       const result = await model.generateContent(prompt);
       return bot.sendMessage(chatId, result.response.text(), mainMenu);
@@ -181,13 +301,11 @@ bot.on('message', async (msg) => {
       return bot.sendMessage(chatId, str, mainMenu);
     }
 
-    // Admin simple handlers (can be expanded)
     if (userId === ADMIN_ID && text === '➕ Söz Əlavə Et') {
       await setUserState(userId, 'admin_add_word');
       return bot.sendMessage(chatId, 'Format: söz | səviyyə | kateqoriya\nMəsələn: apple | A1 | food');
     }
 
-    // Default fallback
     bot.sendMessage(chatId, 'Zəhmət olmasa menyudan seçim edin.', mainMenu);
 
   } catch (err) {
@@ -213,43 +331,25 @@ bot.on('callback_query', async (query) => {
       await pool.query('INSERT IGNORE INTO favorites (user_id, element_type, element_id) VALUES (?, ?, ?)', [userId, 'word', wordId]);
       return bot.answerCallbackQuery({ callback_query_id: query.id, text: 'Favoritlərə əlavə edildi!' });
     }
-
-    // Handle Quizzes, exams, etc...
     
   } catch (err) {
     console.error(err);
   }
 });
 
-// Bot birinci dəfə başlayanda avtomatik seed etmək üçün
-import { execSync } from 'child_process';
-
-async function runInitialSeed() {
-  try {
-    // Databazada söz varsa, seed etməyə ehtiyac yoxdur
-    const [rows] = await pool.query('SELECT COUNT(*) as count FROM words');
-    if (rows[0].count === 0) {
-      console.log('Database boşdur, Seed prosesi başlayır...');
-      execSync('node seed.js', { stdio: 'inherit' });
-      console.log('Seed prosesi uğurla tamamlandı!');
-    } else {
-      console.log(`Database-də artıq ${rows[0].count} söz var. Seedə ehtiyac yoxdur.`);
-    }
-  } catch (err) {
-    console.error('Seed zamanı xəta (cədvəl yoxdursa normaldır):', err.message);
-    // Əgər cədvəllər hələ yaradılmayıbsa, seed.js işləməzdən əvvəl sql cədvəllərini yaratmaq lazımdır.
-  }
-}
-
 // START SERVER
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   
-  // Avtomatik seed yoxlanışı
+  // 1. Cədvəlləri yaradırıq
+  await initDatabase();
+  
+  // 2. Məlumatları yükləyirik (Seed)
   await runInitialSeed();
 
-  if (process.env.RENDER_EXTERNAL_URL) {
-    const webhookUrl = process.env.RENDER_EXTERNAL_URL + '/webhook';
+  // 3. Webhook qururuq
+  if (RENDER_URL) {
+    const webhookUrl = RENDER_URL + '/webhook';
     await bot.setWebHook(webhookUrl);
     console.log(`Webhook set to ${webhookUrl}`);
   }
