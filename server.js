@@ -89,7 +89,7 @@ async function getUserState(userId) {
 async function setUserState(userId, state, data = null) {
   await pool.query(
     'INSERT INTO user_states (user_id, state, state_data) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE state = ?, state_data = ?',
-    [userId, state, JSON.stringify(data), state, JSON.stringify(data)]
+    [userId, state, data ? JSON.stringify(data) : null, state, data ? JSON.stringify(data) : null]
   );
 }
 
@@ -157,6 +157,43 @@ app.post('/webhook', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
+
+// FUNCTION: SEND WORD
+async function sendRandomWord(chatId, userId, user) {
+  const [rows] = await pool.query('SELECT * FROM words WHERE level = ? ORDER BY RAND() LIMIT 1', [user.level]);
+  if (rows.length === 0) return bot.sendMessage(chatId, 'Bu səviyyədə söz tapılmadı.', mainMenu);
+  const w = rows[0];
+  await saveLastMessage(userId, `Word: ${w.word}\nLevel: ${w.level}\nCategory: ${w.category}`);
+  await setUserState(userId, 'learning_word', { word_id: w.id });
+  return bot.sendMessage(chatId, `📚 Söz: <b>${w.word}</b>\n📊 Səviyyə: ${w.level}\n🏷️ Kateqoriya: ${w.category}`, {
+    parse_mode: 'HTML',
+    reply_markup: { inline_keyboard: [
+      [{ text: '⭐ Favorit', callback_data: `fav_word_${w.id}` }, { text: '➡️ Növbəti', callback_data: 'next_word' }],
+      [{ text: '🏠 Menyu', callback_data: 'menu' }]
+    ]}
+  });
+}
+
+// FUNCTION: SEND RULE
+async function sendNextRule(chatId, userId, user) {
+  const [rules] = await pool.query(`
+    SELECT r.* FROM rules r
+    LEFT JOIN user_rule_progress urp ON r.id = urp.rule_id AND urp.user_id = ?
+    WHERE r.level = ? AND urp.id IS NULL
+    ORDER BY r.sequence_number LIMIT 1`, [userId, user.level]);
+
+  if (rules.length === 0) return bot.sendMessage(chatId, 'Bu səviyyədə öyrənəcəyiniz yeni qayda qalmayıb. 🎉', mainMenu);
+  const r = rules[0];
+  await saveLastMessage(userId, `Rule: ${r.title}\nContent: ${r.content}\nExample: ${r.example}`);
+  await setUserState(userId, 'learning_rule', { rule_id: r.id });
+  return bot.sendMessage(chatId, `📖 <b>${r.title}</b>\n\n${r.content}\n\n📝 Nümunə:\n<i>${r.example}</i>`, {
+    parse_mode: 'HTML',
+    reply_markup: { inline_keyboard: [
+      [{ text: '✅ Başa düşdüm', callback_data: `understood_rule_${r.id}` }, { text: '⭐ Favorit', callback_data: `fav_rule_${r.id}` }],
+      [{ text: '➡️ Növbəti', callback_data: 'next_rule' }, { text: '🏠 Menyu', callback_data: 'menu' }]
+    ]}
+  });
+}
 
 // MESSAGE HANDLER
 bot.on('message', async (msg) => {
@@ -239,39 +276,12 @@ bot.on('message', async (msg) => {
       return bot.sendMessage(chatId, `👋 Salam, ${user.full_name}!\n\n📊 Səviyyən: ${user.level}\n🏆 Xalın: ${user.score}\n🔥 Streak: ${user.streak} gün`, mainMenu);
     }
 
-    if (text === '📚 Söz Öyrən' || text === '➡️ Növbəti') {
-      const [rows] = await pool.query('SELECT * FROM words WHERE level = ? ORDER BY RAND() LIMIT 1', [user.level]);
-      if (rows.length === 0) return bot.sendMessage(chatId, 'Bu səviyyədə söz tapılmadı.', mainMenu);
-      const w = rows[0];
-      await saveLastMessage(userId, `Word: ${w.word}\nLevel: ${w.level}\nCategory: ${w.category}`);
-      await setUserState(userId, 'learning_word', { word_id: w.id });
-      return bot.sendMessage(chatId, `📚 Söz: <b>${w.word}</b>\n📊 Səviyyə: ${w.level}\n🏷️ Kateqoriya: ${w.category}`, {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: [
-          [{ text: '⭐ Favorit', callback_data: `fav_word_${w.id}` }, { text: '➡️ Növbəti', callback_data: 'next_word' }],
-          [{ text: '🏠 Menyu', callback_data: 'menu' }]
-        ]}
-      });
+    if (text === '📚 Söz Öyrən') {
+      return sendRandomWord(chatId, userId, user);
     }
 
     if (text === '📖 Qayda Öyrən') {
-      const [rules] = await pool.query(`
-        SELECT r.* FROM rules r
-        LEFT JOIN user_rule_progress urp ON r.id = urp.rule_id AND urp.user_id = ?
-        WHERE r.level = ? AND urp.id IS NULL
-        ORDER BY r.sequence_number LIMIT 1`, [userId, user.level]);
-
-      if (rules.length === 0) return bot.sendMessage(chatId, 'Bu səviyyədə öyrənəcəyiniz yeni qayda qalmayıb. 🎉', mainMenu);
-      const r = rules[0];
-      await saveLastMessage(userId, `Rule: ${r.title}\nContent: ${r.content}\nExample: ${r.example}`);
-      await setUserState(userId, 'learning_rule', { rule_id: r.id });
-      return bot.sendMessage(chatId, `📖 <b>${r.title}</b>\n\n${r.content}\n\n📝 Nümunə:\n<i>${r.example}</i>`, {
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: [
-          [{ text: '✅ Başa düşdüm', callback_data: `understood_rule_${r.id}` }, { text: '⭐ Favorit', callback_data: `fav_rule_${r.id}` }],
-          [{ text: '➡️ Növbəti', callback_data: 'next_rule' }, { text: '🏠 Menyu', callback_data: 'menu' }]
-        ]}
-      });
+      return sendNextRule(chatId, userId, user);
     }
 
     if (text === '📝 Sözlər Quiz' || text === '❓ Qayda Quiz') {
@@ -404,8 +414,9 @@ bot.on('message', async (msg) => {
         const [lastMsgRow] = await pool.query('SELECT message_text FROM user_last_messages WHERE user_id = ?', [userId]);
         if (!lastMsgRow || lastMsgRow.length === 0) return bot.sendMessage(chatId, 'Heç bir mesaj yoxdur ki, izah edim. Əvvəlcə bir söz öyrənin.', mainMenu);
         
+        // Gemini 3.5 Flash modeli istifadə olunur
         const prompt = `Sən ingilis dili müəllimisisən. Aşağıdakı mesajı Azərbaycan dilində (latın əlifbası ilə) sadə və aydın şəkildə izah et. Qrammatika, söz ehtiyatı və çətin nöqtələri açıqla.\n\nMesaj: ${lastMsgRow[0].message_text}`;
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-3.5-flash' });
         
         await bot.sendMessage(chatId, '🤖 AI düşünür...');
         const result = await model.generateContent(prompt);
@@ -501,11 +512,10 @@ bot.on('callback_query', async (query) => {
   const chatId = query.message.chat.id;
   const data = query.data;
   
-  // Telegram düyməsinə basıldığını dərhal təsdiq edirik ki, "loading" işarəsi qalmasın
+  // Telegram düyməsinə basıldığını dərhal təsdiq edirik
   await bot.answerCallbackQuery({ callback_query_id: query.id }).catch(e => console.log("Callback err:", e.message));
   
   try {
-    // İstifadəçini yoxlayırıq (əgər /start etməyibsə)
     let [uRows] = await pool.query('SELECT * FROM users WHERE telegram_id = ?', [userId]);
     let user;
     if (uRows.length === 0) {
@@ -526,6 +536,16 @@ bot.on('callback_query', async (query) => {
       return bot.sendMessage(chatId, 'Əsas menyu:', mainMenu);
     }
     
+    // NEXT WORD
+    if (data === 'next_word') {
+      return sendRandomWord(chatId, userId, user);
+    }
+
+    // NEXT RULE
+    if (data === 'next_rule') {
+      return sendNextRule(chatId, userId, user);
+    }
+
     // LEVEL SELECT
     if (data.startsWith('level_')) {
       const lvl = data.split('_')[1];
@@ -537,7 +557,7 @@ bot.on('callback_query', async (query) => {
     // FAV WORD / RULE
     if (data.startsWith('fav_word_') || data.startsWith('fav_rule_')) {
       const parts = data.split('_');
-      const type = parts[1]; // word və ya rule
+      const type = parts[1];
       const elementId = parts[2];
       await pool.query('INSERT IGNORE INTO favorites (user_id, element_type, element_id) VALUES (?, ?, ?)', [userId, type, elementId]);
       return bot.sendMessage(chatId, '⭐ Favoritlərə əlavə edildi!');
@@ -554,7 +574,7 @@ bot.on('callback_query', async (query) => {
     if (data.startsWith('understood_rule_')) {
       const ruleId = data.split('_')[2];
       await pool.query('INSERT IGNORE INTO user_rule_progress (user_id, rule_id) VALUES (?, ?)', [userId, ruleId]);
-      return bot.sendMessage(chatId, '✅ Başa düşüldü kimi qeyd edildi. Növbəti qaydaya keçək!', {
+      return bot.sendMessage(chatId, '✅ Başa düşüldü kimi qeyd edildi.', {
         reply_markup: { inline_keyboard: [[{ text: '➡️ Növbəti Qayda', callback_data: 'next_rule' }], [{ text: '🏠 Menyu', callback_data: 'menu' }]] }
       });
     }
@@ -563,6 +583,13 @@ bot.on('callback_query', async (query) => {
     if (data === 'clear_wrong') {
       await pool.query('UPDATE wrong_answers SET reviewed = TRUE WHERE user_id = ?', [userId]);
       return bot.sendMessage(chatId, '🧹 Səhv cavablar təmizləndi.', mainMenu);
+    }
+
+    // RETRY WRONG
+    if (data.startsWith('retry_wrong_')) {
+      const wId = data.split('_')[2];
+      await pool.query('UPDATE wrong_answers SET reviewed = TRUE WHERE id = ? AND user_id = ?', [wId, userId]);
+      return bot.sendMessage(chatId, '✅ Sual baxılmış kimi qeyd edildi. Yeni sözlərə davam edək!', mainMenu);
     }
 
     // QUIZ ANSWER
