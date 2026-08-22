@@ -44,6 +44,14 @@ const adminMenu = {
   }
 };
 
+// JSON parse helper (TiDB JSON formatlari ucun)
+function safeParse(data) {
+  if (typeof data === 'string') {
+    try { return JSON.parse(data); } catch { return {}; }
+  }
+  return data || {};
+}
+
 // DB TABLE CREATER
 async function initDatabase() {
   try {
@@ -149,14 +157,6 @@ app.post('/webhook', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
-
-// JSON parse helper (TiDB JSON formatlari ucun)
-function safeParse(data) {
-  if (typeof data === 'string') {
-    try { return JSON.parse(data); } catch { return {}; }
-  }
-  return data || {};
-}
 
 // MESSAGE HANDLER
 bot.on('message', async (msg) => {
@@ -500,12 +500,27 @@ bot.on('callback_query', async (query) => {
   const userId = query.from.id;
   const chatId = query.message.chat.id;
   const data = query.data;
-  const [uRows] = await pool.query('SELECT * FROM users WHERE telegram_id = ?', [userId]);
-  const user = uRows[0];
-  let userState = await getUserState(userId);
-  const stateData = safeParse(userState.state_data);
+  
+  // Telegram düyməsinə basıldığını dərhal təsdiq edirik ki, "loading" işarəsi qalmasın
+  await bot.answerCallbackQuery({ callback_query_id: query.id }).catch(e => console.log("Callback err:", e.message));
   
   try {
+    // İstifadəçini yoxlayırıq (əgər /start etməyibsə)
+    let [uRows] = await pool.query('SELECT * FROM users WHERE telegram_id = ?', [userId]);
+    let user;
+    if (uRows.length === 0) {
+      const firstName = query.from.first_name || '';
+      const lastName = query.from.last_name || '';
+      const fullName = `${firstName} ${lastName}`.trim() || 'İstifadəçi';
+      await pool.query('INSERT INTO users (telegram_id, full_name, username) VALUES (?, ?, ?)', [userId, fullName, query.from.username]);
+      user = { telegram_id: userId, full_name: fullName, level: 'A1', score: 0, streak: 0 };
+    } else {
+      user = uRows[0];
+    }
+
+    let userState = await getUserState(userId);
+    const stateData = safeParse(userState.state_data);
+    
     if (data === 'menu') {
       await setUserState(userId, 'idle');
       return bot.sendMessage(chatId, 'Əsas menyu:', mainMenu);
@@ -519,30 +534,29 @@ bot.on('callback_query', async (query) => {
       return bot.sendMessage(chatId, `✅ Səviyyəniz ${lvl} olaraq dəyişdirildi.`, mainMenu);
     }
 
-    // FAV WORD
-    if (data.startsWith('fav_word_')) {
-      const wordId = data.split('_')[2];
-      await pool.query('INSERT IGNORE INTO favorites (user_id, element_type, element_id) VALUES (?, ?, ?)', [userId, 'word', wordId]);
-      return bot.answerCallbackQuery({ callback_query_id: query.id, text: 'Favoritlərə əlavə edildi!' });
-    }
-    if (data.startsWith('fav_rule_')) {
-      const ruleId = data.split('_')[2];
-      await pool.query('INSERT IGNORE INTO favorites (user_id, element_type, element_id) VALUES (?, ?, ?)', [userId, 'rule', ruleId]);
-      return bot.answerCallbackQuery({ callback_query_id: query.id, text: 'Favoritlərə əlavə edildi!' });
+    // FAV WORD / RULE
+    if (data.startsWith('fav_word_') || data.startsWith('fav_rule_')) {
+      const parts = data.split('_');
+      const type = parts[1]; // word və ya rule
+      const elementId = parts[2];
+      await pool.query('INSERT IGNORE INTO favorites (user_id, element_type, element_id) VALUES (?, ?, ?)', [userId, type, elementId]);
+      return bot.sendMessage(chatId, '⭐ Favoritlərə əlavə edildi!');
     }
 
     // DEL FAV
     if (data.startsWith('del_fav_')) {
       const favId = data.split('_')[2];
       await pool.query('DELETE FROM favorites WHERE id = ? AND user_id = ?', [favId, userId]);
-      return bot.answerCallbackQuery({ callback_query_id: query.id, text: 'Silindi!' });
+      return bot.sendMessage(chatId, '❌ Silindi!');
     }
 
     // UNDERSTOOD RULE
     if (data.startsWith('understood_rule_')) {
       const ruleId = data.split('_')[2];
       await pool.query('INSERT IGNORE INTO user_rule_progress (user_id, rule_id) VALUES (?, ?)', [userId, ruleId]);
-      return bot.answerCallbackQuery({ callback_query_id: query.id, text: 'Başa düşüldü!' });
+      return bot.sendMessage(chatId, '✅ Başa düşüldü kimi qeyd edildi. Növbəti qaydaya keçək!', {
+        reply_markup: { inline_keyboard: [[{ text: '➡️ Növbəti Qayda', callback_data: 'next_rule' }], [{ text: '🏠 Menyu', callback_data: 'menu' }]] }
+      });
     }
 
     // CLEAR WRONG
@@ -558,25 +572,22 @@ bot.on('callback_query', async (query) => {
       const ans = parts[2];
       
       const [qs] = await pool.query('SELECT * FROM questions WHERE id = ?', [qId]);
-      if (qs.length === 0) return bot.answerCallbackQuery({ callback_query_id: query.id, text: 'Sual tapılmadı.' });
+      if (qs.length === 0) return bot.sendMessage(chatId, 'Sual tapılmadı.');
       const q = qs[0];
       
       const isCorrect = q.correct_answer === ans;
       if (isCorrect) {
         await pool.query('UPDATE users SET score = score + 10 WHERE telegram_id = ?', [userId]);
-        await bot.answerCallbackQuery({ callback_query_id: query.id, text: '✅ Düzgündür! +10 xal' });
       } else {
-        await bot.answerCallbackQuery({ callback_query_id: query.id, text: '❌ Səhv cavab!' });
         await pool.query('INSERT INTO wrong_answers (user_id, question_id, question_type, question_text, user_answer, correct_answer, explanation) VALUES (?, ?, ?, ?, ?, ?, ?)', 
           [userId, q.id, q.type, q.question_text, ans, q.correct_answer, q.explanation]);
       }
 
-      // Update daily stats
       const today = new Date().toISOString().split('T')[0];
       await pool.query('INSERT INTO daily_stats (user_id, stat_date, questions_answered, correct_count) VALUES (?, ?, 1, ?) ON DUPLICATE KEY UPDATE questions_answered = questions_answered + 1, correct_count = correct_count + ?', 
         [userId, today, isCorrect ? 1 : 0, isCorrect ? 1 : 0]);
 
-      let msg = `${isCorrect ? '✅ Düzgündür!' : '❌ Səhv!'}\n\nİzah: ${q.explanation}\n\nDavam edək?`;
+      let msg = `${isCorrect ? '✅ Düzgündür! +10 xal' : '❌ Səhv cavab!'}\n\nİzah: ${q.explanation}\n\nDavam edək?`;
       return bot.sendMessage(chatId, msg, {
         reply_markup: { inline_keyboard: [
           [{ text: '➡️ Növbəti sual', callback_data: 'next_quiz' }],
@@ -586,16 +597,21 @@ bot.on('callback_query', async (query) => {
     }
 
     if (data === 'next_quiz') {
-      const type = userState.state.includes('word') ? 'word_quiz' : 'rule_quiz';
+      let type = 'word_quiz';
+      if (userState.state && userState.state.includes('rule')) type = 'rule_quiz';
+      
       const [qs] = await pool.query('SELECT * FROM questions WHERE type = ? AND level = ? ORDER BY RAND() LIMIT 1', [type, user.level]);
-      if (qs.length === 0) return bot.sendMessage(chatId, 'Sual tapılmadı.', mainMenu);
+      if (qs.length === 0) return bot.sendMessage(chatId, 'Bu səviyyə üçün sual tapılmadı.', mainMenu);
+      
       const q = qs[0];
       const options = safeParse(q.options);
       await setUserState(userId, `quiz_${type}`, { q_id: q.id });
+      
       const inlineKeyboard = options.map((opt, idx) => {
         const letter = String.fromCharCode(65 + idx);
         return [{ text: opt, callback_data: `quiz_${q.id}_${letter}` }];
       });
+
       return bot.sendMessage(chatId, `❓ ${q.question_text}`, {
         reply_markup: { inline_keyboard: [...inlineKeyboard, [{ text: '🏠 Menyu', callback_data: 'menu' }]] }
       });
@@ -608,31 +624,30 @@ bot.on('callback_query', async (query) => {
       const ans = parts[2];
       
       const [qs] = await pool.query('SELECT * FROM questions WHERE id = ?', [qId]);
-      if (qs.length === 0) return bot.answerCallbackQuery({ callback_query_id: query.id, text: 'Sual tapılmadı.' });
+      if (qs.length === 0) return bot.sendMessage(chatId, 'Sual tapılmadı.');
       const q = qs[0];
       
       const isCorrect = q.correct_answer === ans;
       if (isCorrect) {
-        stateData.score += 5;
-        await bot.answerCallbackQuery({ callback_query_id: query.id, text: '✅ Düzgündür! +5 xal' });
+        stateData.score = (stateData.score || 0) + 5;
       } else {
-        await bot.answerCallbackQuery({ callback_query_id: query.id, text: '❌ Səhv cavab!' });
         await pool.query('INSERT INTO wrong_answers (user_id, question_id, question_type, question_text, user_answer, correct_answer, explanation) VALUES (?, ?, ?, ?, ?, ?, ?)', 
           [userId, q.id, 'general', q.question_text, ans, q.correct_answer, q.explanation]);
       }
 
-      stateData.current_index += 1;
+      stateData.current_index = (stateData.current_index || 0) + 1;
       const isFinished = stateData.current_index >= 10;
 
       if (isFinished) {
-        await pool.query('UPDATE users SET score = score + ? WHERE telegram_id = ?', [stateData.score, userId]);
-        const percentage = (stateData.score / 50) * 100;
+        const finalScore = stateData.score || 0;
+        await pool.query('UPDATE users SET score = score + ? WHERE telegram_id = ?', [finalScore, userId]);
+        const percentage = (finalScore / 50) * 100;
         
         if (percentage === 100) await checkAndGrantAchievement(userId, 'Mükəmməl İmtahan', chatId);
         else if (percentage >= 80) await checkAndGrantAchievement(userId, 'Yüksək Nəticə', chatId);
         
         await setUserState(userId, 'idle');
-        return bot.sendMessage(chatId, `🎓 İmtahan bitdi!\n\nNəticəniz: ${stateData.score} xal (${percentage}%)\n\n${percentage >= 80 ? '🎉 Əla nəticə!' : 'Daha çox çalışın!'}`, mainMenu);
+        return bot.sendMessage(chatId, `🎓 İmtahan bitdi!\n\nNəticəniz: ${finalScore} xal (${percentage}%)\n\n${percentage >= 80 ? '🎉 Əla nəticə!' : 'Daha çox çalışın!'}`, mainMenu);
       } else {
         await setUserState(userId, 'exam', stateData);
         const [nextQs] = await pool.query('SELECT * FROM questions WHERE id = ?', [stateData.questions[stateData.current_index]]);
@@ -652,14 +667,13 @@ bot.on('callback_query', async (query) => {
     if (data.startsWith('aq_type_')) {
       const type = data.replace('aq_type_', '');
       stateData.type = type;
-      stateData.level = 'A1'; // Default
       await setUserState(userId, 'admin_add_question_step2', stateData);
       return bot.sendMessage(chatId, 'Sual mətnini daxil edin:', mainMenu);
     }
 
   } catch (err) {
     console.error("CALLBACK XƏTA:", err);
-    bot.answerCallbackQuery({ callback_query_id: query.id, text: 'Xəta baş verdi.' });
+    bot.sendMessage(chatId, 'Xəta baş verdi.', mainMenu);
   }
 });
 
