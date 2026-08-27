@@ -258,8 +258,10 @@ const allQuestions = [...wordQuestions, ...ruleQuestions];
 async function seed() {
   try {
     console.log('500 Söz yoxlanılır və əlavə edilir...');
-    const wordValues = words.map(w => [w.word, w.level, w.category]);
-    await pool.query('INSERT IGNORE INTO words (word, level, category) VALUES ?', [wordValues]);
+    const wordValues = words.map(w => [w.word, w.translation, w.level, w.category]);
+    await pool.query('INSERT IGNORE INTO words (word, translation, level, category) VALUES ?', [wordValues]);
+    
+    console.log('50 Qayda yoxlanılır və əlavə edilir...');
     
     console.log('50 Qayda yoxlanılır və əlavə edilir...');
     const ruleValues = rules.map(r => [r[0], r[1], r[2], r[3], r[4]]);
