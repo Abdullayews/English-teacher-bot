@@ -6,20 +6,17 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { execSync } from 'child_process';
 import pool from './db.js';
 
-// CONFIG
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const ADMIN_ID = parseInt(process.env.ADMIN_TELEGRAM_ID);
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 const RENDER_URL = process.env.RENDER_EXTERNAL_URL;
 const PORT = process.env.PORT || 3000;
 
-// INIT
 const app = express();
 app.use(express.json());
 const bot = new TelegramBot(BOT_TOKEN, { webHook: true });
 const genAI = new GoogleGenerativeAI(GEMINI_KEY);
 
-// KEYBOARDS
 const mainMenu = {
   reply_markup: {
     keyboard: [
@@ -28,8 +25,7 @@ const mainMenu = {
       ['🎓 Ümumi İmtahan', '⚙️ Səviyyə Seç'],
       ['⭐ Favorilər', '❌ Səhv Cavablar'],
       ['📊 Hesabat', '🏆 Liderlər'],
-      ['🔔 Günün Sözü', '🤖 AI İzah'],
-      ['🔍 Axtarış']
+      ['🔔 Günün Sözü', '🤖 AI İzah']
     ], resize_keyboard: true
   }
 };
@@ -51,12 +47,11 @@ function safeParse(data) {
   return data || [];
 }
 
-// DB TABLE CREATER
 async function initDatabase() {
   try {
     const tables = [
       `CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, telegram_id BIGINT NOT NULL UNIQUE, username VARCHAR(255), full_name VARCHAR(255) NOT NULL, level ENUM('A1','A2','B1','B2','C1') DEFAULT 'A1', score INT DEFAULT 0, streak INT DEFAULT 0, last_active_date DATE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)`,
-      `CREATE TABLE IF NOT EXISTS words (id INT AUTO_INCREMENT PRIMARY KEY, word VARCHAR(255) NOT NULL, level ENUM('A1','A2','B1','B2','C1') NOT NULL, category VARCHAR(100) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
+      `CREATE TABLE IF NOT EXISTS words (id INT AUTO_INCREMENT PRIMARY KEY, word VARCHAR(255) NOT NULL, translation VARCHAR(255), level ENUM('A1','A2','B1','B2','C1') NOT NULL, category VARCHAR(100) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
       `CREATE TABLE IF NOT EXISTS rules (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(500) NOT NULL, content TEXT NOT NULL, example TEXT, level ENUM('A1','A2','B1','B2','C1') NOT NULL, category VARCHAR(100) DEFAULT 'grammar', sequence_number INT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
       `CREATE TABLE IF NOT EXISTS questions (id INT AUTO_INCREMENT PRIMARY KEY, type ENUM('word_quiz','rule_quiz','general') NOT NULL, question_text TEXT NOT NULL, options JSON NOT NULL, correct_answer VARCHAR(10) NOT NULL, explanation TEXT, level ENUM('A1','A2','B1','B2','C1') NOT NULL, category VARCHAR(100), related_id INT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`,
       `CREATE TABLE IF NOT EXISTS favorites (id INT AUTO_INCREMENT PRIMARY KEY, user_id BIGINT NOT NULL, element_type ENUM('word','rule') NOT NULL, element_id INT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY uniq_fav (user_id, element_type, element_id))`,
@@ -127,7 +122,6 @@ async function runInitialSeed() {
   }
 }
 
-// SELF-PING (10 dəqiqədən bir atılır ki, Render heç vaxt yatmasın)
 if (RENDER_URL) {
   cron.schedule('*/10 * * * *', () => {
     https.get(RENDER_URL + '/health', (res) => {
@@ -149,9 +143,9 @@ async function sendRandomWord(chatId, userId, user) {
   const [rows] = await pool.query('SELECT * FROM words WHERE level = ? ORDER BY RAND() LIMIT 1', [user.level]);
   if (rows.length === 0) return bot.sendMessage(chatId, 'Bu səviyyədə söz tapılmadı.', mainMenu);
   const w = rows[0];
-  await saveLastMessage(userId, `Word: ${w.word}\nLevel: ${w.level}\nCategory: ${w.category}`);
+  await saveLastMessage(userId, `Word: ${w.word}\nTranslation: ${w.translation || 'Yoxdur'}\nLevel: ${w.level}\nCategory: ${w.category}`);
   await setUserState(userId, 'learning_word', { word_id: w.id });
-  return bot.sendMessage(chatId, `📚 Söz: <b>${w.word}</b>\n📊 Səviyyə: ${w.level}\n🏷️ Kateqoriya: ${w.category}`, {
+  return bot.sendMessage(chatId, `📚 Söz: <b>${w.word}</b>\n📖 Tərcümə: <i>${w.translation || 'Yoxdur'}</i>\n📊 Səviyyə: ${w.level}\n🏷️ Kateqoriya: ${w.category}`, {
     parse_mode: 'HTML',
     reply_markup: { inline_keyboard: [
       [{ text: '⭐ Favorit', callback_data: `fav_word_${w.id}` }, { text: '➡️ Növbəti', callback_data: 'next_word' }],
@@ -180,7 +174,6 @@ async function sendNextRule(chatId, userId, user) {
   });
 }
 
-// MESSAGE HANDLER
 bot.on('message', async (msg) => {
   const chatId = msg.chat.id;
   const userId = msg.from.id;
@@ -205,7 +198,6 @@ bot.on('message', async (msg) => {
     let userState = await getUserState(userId);
     const stateData = safeParse(userState.state_data);
     
-    // 1. QLOBAL KOMUTLAR (Hər zaman icra olunur, state-i sıfırlayır)
     if (text === '❌ Ləğv Et' || text === '/start' || text === '🏠 Ana Menyu') {
       await setUserState(userId, 'idle');
       if (text === '❌ Ləğv Et') return bot.sendMessage(chatId, 'Proses ləğv edildi.', userId === ADMIN_ID ? adminMenu : mainMenu);
@@ -305,8 +297,8 @@ bot.on('message', async (msg) => {
       const [rows] = await pool.query('SELECT * FROM words ORDER BY RAND() LIMIT 1');
       if (rows.length === 0) return bot.sendMessage(chatId, 'Söz tapılmadı.', mainMenu);
       const w = rows[0];
-      await saveLastMessage(userId, `Word: ${w.word}\nLevel: ${w.level}\nCategory: ${w.category}`);
-      return bot.sendMessage(chatId, `🔔 Günün Sözü:\n\n📚 <b>${w.word}</b>\n📊 Səviyyə: ${w.level}\n🏷️ Kateqoriya: ${w.category}`, { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: '🏠 Menyu', callback_data: 'menu' }]] }});
+      await saveLastMessage(userId, `Word: ${w.word}\nTranslation: ${w.translation || 'Yoxdur'}\nLevel: ${w.level}\nCategory: ${w.category}`);
+      return bot.sendMessage(chatId, `🔔 Günün Sözü:\n\n📚 <b>${w.word}</b>\n📖 Tərcümə: <i>${w.translation || 'Yoxdur'}</i>\n📊 Səviyyə: ${w.level}\n🏷️ Kateqoriya: ${w.category}`, { parse_mode: 'HTML', reply_markup: { inline_keyboard: [[{ text: '🏠 Menyu', callback_data: 'menu' }]] }});
     }
 
     if (text === '🤖 AI İzah') {
@@ -321,7 +313,7 @@ bot.on('message', async (msg) => {
         4. Hər bölməni emoji ilə başlat (məsələn: 📖, 💡, ✍️, 📝).
         5. Yazı stili modern, aydın və teleqram üçün uyğun olsun.
         Mesaj: ${lastMsgRow[0].message_text}`;
-        const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         await bot.sendMessage(chatId, '🤖 AI düşünür...');
         const result = await model.generateContent(prompt);
         return bot.sendMessage(chatId, result.response.text(), { parse_mode: 'HTML', reply_markup: mainMenu.reply_markup });
@@ -330,20 +322,25 @@ bot.on('message', async (msg) => {
       }
     }
 
-    if (text === '🔍 Axtarış') {
-      await setUserState(userId, 'search');
-      return bot.sendMessage(chatId, 'Axtarmaq istədiyiniz sözü və ya qaydanı yazın:');
-    }
-
-    // ADMIN MENUS
     if (userId === ADMIN_ID && text === '/admin') {
       await setUserState(userId, 'idle');
       return bot.sendMessage(chatId, 'Admin Paneli:', adminMenu);
     }
+    
+    // ADMİN SÖZ ƏLAVƏ ET (İndi Tərcümə də var!)
     if (userId === ADMIN_ID && text === '➕ Söz Əlavə Et') {
       await setUserState(userId, 'admin_add_word');
-      return bot.sendMessage(chatId, 'Format: söz | səviyyə | kateqoriya\nMəsələn: apple | A1 | food', adminMenu);
+      return bot.sendMessage(chatId, 'Format: söz | tərcümə | səviyyə | kateqoriya\nMəsələn: apple | Alma | A1 | food', adminMenu);
     }
+    if (userState.state === 'admin_add_word' && userId === ADMIN_ID) {
+      const parts = text.split('|').map(p => p.trim());
+      if (parts.length === 4) {
+        await pool.query('INSERT INTO words (word, translation, level, category) VALUES (?, ?, ?, ?)', [parts[0], parts[1], parts[2], parts[3]]);
+        return bot.sendMessage(chatId, `✅ Söz əlavə edildi: ${parts[0]} (${parts[1]})`, adminMenu);
+      }
+      return bot.sendMessage(chatId, 'Format yanlışdır. Format: söz | tərcümə | səviyyə | kateqoriya', adminMenu);
+    }
+
     if (userId === ADMIN_ID && text === '➕ Qayda Əlavə Et') {
       await setUserState(userId, 'admin_add_rule_step1', {});
       return bot.sendMessage(chatId, 'Qaydanın başlığını daxil edin:', adminMenu);
@@ -363,26 +360,6 @@ bot.on('message', async (msg) => {
       const [rCount] = await pool.query('SELECT COUNT(*) as c FROM rules');
       const [qCount] = await pool.query('SELECT COUNT(*) as c FROM questions');
       return bot.sendMessage(chatId, `📈 Bot Statistikası:\n\n👤 İstifadəçi: ${uCount[0].c}\n📚 Sözlər: ${wCount[0].c}\n📖 Qaydalar: ${rCount[0].c}\n❓ Suallar: ${qCount[0].c}`, adminMenu);
-    }
-
-    // 2. STATE-Ə GÖRƏ MƏNTİQ (Yalnız komut olmayan mətnlər üçün)
-    if (userState.state === 'search') {
-      const searchTerm = `%${text.toLowerCase()}%`;
-      const [res] = await pool.query(`(SELECT id, word as text, 'word' as type FROM words WHERE LOWER(word) LIKE ? LIMIT 10) UNION ALL (SELECT id, title as text, 'rule' as type FROM rules WHERE LOWER(title) LIKE ? LIMIT 10)`, [searchTerm, searchTerm]);
-      await setUserState(userId, 'idle');
-      if (res.length === 0) return bot.sendMessage(chatId, 'Heç nə tapılmadı.', mainMenu);
-      let str = '🔍 Axtarış Nəticələri:\n\n';
-      res.forEach(r => str += `[${r.type}] ${r.text}\n`);
-      return bot.sendMessage(chatId, str, mainMenu);
-    }
-
-    if (userState.state === 'admin_add_word' && userId === ADMIN_ID) {
-      const parts = text.split('|').map(p => p.trim());
-      if (parts.length === 3) {
-        await pool.query('INSERT INTO words (word, level, category) VALUES (?, ?, ?)', [parts[0], parts[1], parts[2]]);
-        return bot.sendMessage(chatId, `✅ Söz əlavə edildi: ${parts[0]}`, adminMenu);
-      }
-      return bot.sendMessage(chatId, 'Format yanlışdır. Format: söz | səviyyə | kateqoriya', adminMenu);
     }
 
     if (userId === ADMIN_ID && userState.state.startsWith('admin_add_question')) {
@@ -411,7 +388,8 @@ bot.on('message', async (msg) => {
       }
       if (userState.state === 'admin_add_question_step5') {
         stateData.explanation = text;
-        await pool.query('INSERT INTO questions (type, question_text, options, correct_answer, explanation, level, category) VALUES (?, ?, ?, ?, ?, ?, ?)', [stateData.type, stateData.question_text, JSON.stringify(stateData.options), stateData.correct_answer, stateData.explanation, stateData.level || 'A1', 'general']);
+        await pool.query('INSERT INTO questions (type, question_text, options, correct_answer, explanation, level, category) VALUES (?, ?, ?, ?, ?, ?, ?)', 
+          [stateData.type, stateData.question_text, JSON.stringify(stateData.options), stateData.correct_answer, stateData.explanation, stateData.level || 'A1', 'general']);
         await setUserState(userId, 'idle');
         return bot.sendMessage(chatId, '✅ Sual əlavə edildi!', adminMenu);
       }
@@ -443,7 +421,6 @@ bot.on('message', async (msg) => {
       }
     }
 
-    // Default fallback
     bot.sendMessage(chatId, 'Zəhmət olmasa menyudan seçim edin.', mainMenu);
 
   } catch (err) {
@@ -452,7 +429,6 @@ bot.on('message', async (msg) => {
   }
 });
 
-// CALLBACK QUERY HANDLER
 bot.on('callback_query', async (query) => {
   const userId = query.from.id;
   const chatId = query.message.chat.id;
