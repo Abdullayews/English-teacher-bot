@@ -321,7 +321,7 @@ bot.on('message', async (msg) => {
         4. Hər bölməni emoji ilə başlat (məsələn: 📖, 💡, ✍️, 📝).
         5. Yazı stili modern, aydın və teleqram üçün uyğun olsun.
         Mesaj: ${lastMsgRow[0].message_text}`;
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
         await bot.sendMessage(chatId, '🤖 AI düşünür...');
         const result = await model.generateContent(prompt);
         return bot.sendMessage(chatId, result.response.text(), { parse_mode: 'HTML', reply_markup: mainMenu.reply_markup });
