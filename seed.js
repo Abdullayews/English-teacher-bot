@@ -117,38 +117,38 @@ const rules = [
   // A1 Qaydaları
   ['Present Simple', 'Hər gün təkrarlanan vərdişləri, ümumi həqiqətləri bildirir. Feilin birinci forması (V1) istifadə olunur. He, she, it üçün sonuna -s artırılır. Sual üçün Do/Does istifadə olunur.', 'She plays tennis every weekend. / Water boils at 100 degrees.', 'A1', 1],
   ['Verb To Be (am/is/are)', 'Şəxsiyyət, yer, yaş, vəziyyət və peşə bildirmək üçün istifadə olunur. I ilə am, he/she/it ilə is, we/you/they ilə are gəlir. Mənfi formada not artırılır.', 'They are students. / I am 25 years old. / She is not here.', 'A1', 2],
-  ['Articles (a/an/the)', 'Tək sayılan isimlərdə istifadə olunur. "A" sait səslə başlamayan sözlərdən əvvəl, "an" sait səslə başlayan sözlərdən əvvəl gəlir. "The" isə xüsusi və ya əvvəldən xatırladılan obyektlər üçün istifadə olunur.', 'I have a cat. The cat is white. / I have an apple.', 'A1', 3],
+  ['Articles (a/an/the)', 'Tək sayılan isimlərdə istifadə olunur. A sait səslə başlamayan sözlərdən əvvəl, an sait səslə başlayan sözlərdən əvvəl gəlir. The isə xüsusi və ya əvvəldən xatırladılan obyektlər üçün istifadə olunur.', 'I have a cat. The cat is white. / I have an apple.', 'A1', 3],
   ['Subject Pronouns', 'Şəxsləri bildirir (I, you, he, she, it, we, they). Cümlədə işi edən subyekti göstərmək üçün istifadə olunur.', 'He is my friend. / They are playing outside.', 'A1', 4],
-  ['There is / There are', 'Hər hansı yerdə bir şeyin olduğunu bildirmək üçün istifadə olunur. Tək obyekt üçün "There is", cəm obyekt üçün "There are" istifadə olunur.', 'There is a book on the table. / There are five apples in the basket.', 'A1', 5],
-  ['Can / Can\'t', 'Qabiliyyət və ya icazə bildirir. Mənfi forması "cannot" və ya "can\'t" şəklində istifadə olunur.', 'I can swim. / She can\'t speak French.', 'A1', 6],
-  ['Prepositions of Place (in/on/at)', 'Yer bildirən ədatlar. "In" içində, "on" üstündə, "at" isə xüsusi bir nöqtə üçün istifadə olunur.', 'The cat is in the box. / The book is on the table. / She is at school.', 'A1', 7],
-  ['Have got / Has got', 'Sahiblik bildirir. I/you/we/they ilə "have got", he/she/it ilə "has got" istifadə olunur.', 'I have got a car. / She has got a new phone.', 'A1', 8],
-  ['Imperatives', 'Əmr, xahiş və ya məsləhət bildirmək üçün istifadə olunur. Subyektsiz feilin birinci forması ilə düzəlir. Mənfi forması "Don\'t" ilə başlayır.', 'Open the door, please. / Don\'t touch that!', 'A1', 9],
-  ['Question Words (What/Where/When)', 'Sual sözləri. "What" nəyi, "Where" haranı, "When" isə vaxtı soruşmaq üçün istifadə olunur.', 'What is your name? / Where do you live? / When is your birthday?', 'A1', 10],
+  ['There is / There are', 'Hər hansı yerdə bir şeyin olduğunu bildirmək üçün istifadə olunur. Tək obyekt üçün There is, cəm obyekt üçün There are istifadə olunur.', 'There is a book on the table. / There are five apples in the basket.', 'A1', 5],
+  ['Can / Can not', 'Qabiliyyət və ya icazə bildirir. Mənfi forması cannot və ya can not şəklində istifadə olunur.', 'I can swim. / She can not speak French.', 'A1', 6],
+  ['Prepositions of Place (in/on/at)', 'Yer bildirən ədatlar. In içində, on üstündə, at isə xüsusi bir nöqtə üçün istifadə olunur.', 'The cat is in the box. / The book is on the table. / She is at school.', 'A1', 7],
+  ['Have got / Has got', 'Sahiblik bildirir. I/you/we/they ilə have got, he/she/it ilə has got istifadə olunur.', 'I have got a car. / She has got a new phone.', 'A1', 8],
+  ['Imperatives', 'Əmr, xahiş və ya məsləhət bildirmək üçün istifadə olunur. Subyektsiz feilin birinci forması ilə düzəlir. Mənfi forması Do not ilə başlayır.', 'Open the door, please. / Do not touch that!', 'A1', 9],
+  ['Question Words (What/Where/When)', 'Sual sözləri. What nəyi, Where haranı, When isə vaxtı soruşmaq üçün istifadə olunur.', 'What is your name? / Where do you live? / When is your birthday?', 'A1', 10],
 
   // A2 Qaydaları
   ['Past Simple', 'Keçmişdə baş verib tamamlanmış hərəkətləri bildirir. Düzgün feillər -ed qəbul edir, qeyri-sadiqlərin xüsusi forması var (go-went). Sual üçün Did istifadə olunur.', 'I visited my grandparents last week. / She did not go to school yesterday.', 'A2', 1],
   ['Be going to', 'Gələcəkdə edilməsi planlanan və ya baş verməsi qaçınılmaz olan hərəkətləri bildirir.', 'I am going to read a book tonight. / Look at those clouds, it is going to rain.', 'A2', 2],
-  ['Comparatives & Superlatives', 'Müqayisə üçün qısa sözlərə -er/-est, uzun sözlərə isə more/the most artırılır. Müqayisədə "than" istifadə olunur.', 'My car is faster than yours. / She is the most intelligent person in the class.', 'A2', 3],
+  ['Comparatives & Superlatives', 'Müqayisə üçün qısa sözlərə -er/-est, uzun sözlərə isə more/the most artırılır. Müqayisədə than istifadə olunur.', 'My car is faster than yours. / She is the most intelligent person in the class.', 'A2', 3],
   ['Present Continuous', 'İndi baş verən və ya müvəqqəti hərəkətləri bildirir. To Be + feilin -ing forması ilə düzəlir.', 'She is reading a book right now. / They are not watching TV at the moment.', 'A2', 4],
-  ['Would like', 'İstək bildirmək üçün istifadə olunur. "Want" kifayət qədər nəzakətli deyil, ona görə "would like" çox istifadə olunur.', 'I would like a cup of tea. / Would you like to go to the cinema?', 'A2', 5],
-  ['Some / Any', 'Miqdar bildirir. Bəzi, hər hansı. "Some" təsdiq cümlələrdə, "any" isə sual və mənfi cümlələrdə istifadə olunur.', 'Is there any milk? Yes, there is some milk. / There aren\'t any apples left.', 'A2', 6],
+  ['Would like', 'İstək bildirmək üçün istifadə olunur. Want kifayət qədər nəzakətli deyil, ona görə would like çox istifadə olunur.', 'I would like a cup of tea. / Would you like to go to the cinema?', 'A2', 5],
+  ['Some / Any', 'Miqdar bildirir. Bəzi, hər hansı. Some təsdiq cümlələrdə, any isə sual və mənfi cümlələrdə istifadə olunur.', 'Is there any milk? Yes, there is some milk. / There are not any apples left.', 'A2', 6],
   ['Adverbs of Frequency', 'Tezlik bildirən zərflər (always, usually, often, sometimes, never). Adətən feildən əvvəl, To Be feilindən isə sonra gəlir.', 'I always wake up early. / She is never late.', 'A2', 7],
   ['Object Pronouns', 'Obyekt əvəzlikləri (me, you, him, her, it, us, them). İşin görüldüyü obyekti göstərmək üçün istifadə olunur.', 'I called him yesterday. / She gave a gift to them.', 'A2', 8],
-  ['Present Perfect (ever/never)', 'Həyat təcrübəsini bildirmək üçün istifadə olunur. Have/Has + V3 quruluşu var. "Ever" suallarda, "never" isə mənfi cümlələrdə istifadə olunur.', 'Have you ever been to Rome? / I have never seen such a beautiful place.', 'A2', 9],
-  ['Modal Verbs (must/mustn\'t)', 'Məcburiyyət və qadağa bildirir. "Must" etməli olduğunu, "mustn\'t" isə etməməli olduğunu bildirir.', 'You must wear a seatbelt in the car. / You mustn\'t smoke here.', 'A2', 10],
+  ['Present Perfect (ever/never)', 'Həyat təcrübəsini bildirmək üçün istifadə olunur. Have/Has + V3 quruluşu var. Ever suallarda, never isə mənfi cümlələrdə istifadə olunur.', 'Have you ever been to Rome? / I have never seen such a beautiful place.', 'A2', 9],
+  ['Modal Verbs (must/must not)', 'Məcburiyyət və qadağa bildirir. Must etməli olduğunu, must not isə etməməli olduğunu bildirir.', 'You must wear a seatbelt in the car. / You must not smoke here.', 'A2', 10],
 
   // B1 Qaydaları
-  ['Present Perfect vs Past Simple', 'Present Perfect keçmişdə baş verib indi təsiri olan hərəkətləri, Past Simple isə tam bitmiş və vaxtı dəqiq bilinən hərəkətləri bildirir.', 'I have lost my keys (I can\'t open the door now). / I lost my keys yesterday.', 'B1', 1],
+  ['Present Perfect vs Past Simple', 'Present Perfect keçmişdə baş verib indi təsiri olan hərəkətləri, Past Simple isə tam bitmiş və vaxtı dəqiq bilinən hərəkətləri bildirir.', 'I have lost my keys (I can not open the door now). / I lost my keys yesterday.', 'B1', 1],
   ['Conditionals (Type 1)', 'Gələcəkdə mümkün olan şərti hərəkətləri bildirir. Quruluşu: If + Present Simple, Future Simple.', 'If it rains tomorrow, I will stay at home.', 'B1', 2],
   ['Passive Voice', 'İşin kim tərəfindən edildiyindən çox, işin görüldüyünə diqqət çəkmək üçün istifadə olunur. To Be + V3 ilə düzəlir.', 'The book was written by him. / The house is being painted right now.', 'B1', 3],
-  ['Used to', 'Keçmişdə edilən, lakin indi edilməyən vərdişləri bildirir.', 'I used to play football when I was a child. / She didn\'t use to like vegetables.', 'B1', 4],
+  ['Used to', 'Keçmişdə edilən, lakin indi edilməyən vərdişləri bildirir.', 'I used to play football when I was a child. / She did not use to like vegetables.', 'B1', 4],
   ['Relative Clauses', 'İsimləri təsvir etmək üçün istifadə olunur. İnsanlar üçün who, əşyalar üçün which, yer üçün where istifadə olunur.', 'The man who lives next door is a doctor. / The book which I read was great.', 'B1', 5],
   ['Gerunds & Infinitives', 'Feildən sonra gələn əlavə feil forma. Bəzi feillərdən sonra ing (enjoy reading), bəzilərindən isə to (want to go) istifadə olunur.', 'I enjoy reading books. / She wants to learn English.', 'B1', 6],
   ['Present Perfect Continuous', 'Keçmişdə başlayıb indi də davam edən hərəkətləri bildirir. Have/Has + been + V-ing ilə düzəlir.', 'I have been studying for 3 hours. / She has been working here since 2010.', 'B1', 7],
   ['Phrasal Verbs', 'Feil və ədatın birləşməsi ilə yaranan və yeni məna kəsb edən ifadələr (get up, look for, give up).', 'I get up at 7 AM. / She is looking for her keys.', 'B1', 8],
   ['Reported Speech (Statements)', 'Başqasının dediyini dolayı yolla çatdırır. Feillər bir gerilik dərəcəsi geri çəkilir.', 'He said he was tired. / She told me that she would call me.', 'B1', 9],
-  ['Modal Verbs of Deduction', 'Ehtimal bildirən modal feillər. Must (mütləq), might/could (bəlkə), can\'t (mümkün deyil).', 'He must be at home (the lights are on). / She can\'t be tired, she slept 10 hours.', 'B1', 10],
+  ['Modal Verbs of Deduction', 'Ehtimal bildirən modal feillər. Must (mütləq), might/could (bəlkə), can not (mümkün deyil).', 'He must be at home (the lights are on). / She can not be tired, she slept 10 hours.', 'B1', 10],
 
   // B2 Qaydaları
   ['Conditionals (Type 2 & 3)', 'Type 2: Həqiqətə zidd olan indiki və ya gələcək vəziyyət (If + Past, would). Type 3: Keçmişdə baş verməmiş hərəkət (If + Past Perfect, would have).', 'If I were you, I would buy that car. / If I had studied, I would have passed.', 'B2', 1],
@@ -156,21 +156,21 @@ const rules = [
   ['Reported Speech (Questions & Commands)', 'Dolayı nitqdə suallar və əmrlər. Sual cümlələri if/whether ilə bağlanır, əmrlər isə told to ilə verilir.', 'She asked if I had seen the movie. / He told me to close the door.', 'B2', 3],
   ['Relative Clauses (Defining & Non-defining)', 'Təyinedici və qeyri-təyinedici cümlələr. Qeyri-təyinedicilər vergül arasında verilir və əhəmiyyətsiz məlumat daşıyır.', 'My brother, who lives in London, is a doctor. / The man who called you is my teacher.', 'B2', 4],
   ['Inversion', 'Cümlə quruluşunun tərsinə çevrilməsi. Mənfi və ya məhdudiyyət bildirən sözlərlə başlayanda baş verir.', 'Never have I seen such a beautiful sunset. / Rarely does he go to the cinema.', 'B2', 5],
-  ['Modal Deduction (Past)', 'Keçmişlə bağlı ehtimallar. Must have (etməli idi), might have (bəlkə etdi), can\'t have (mümkün deyil ki edib).', 'She must have left early. / He can\'t have done that, he was with me.', 'B2', 6],
-  ['Cleft Sentences', 'Cümlənin müəyyən hissəsinə vurğu etmək üçün istifadə olunur. "It is/was ... that/who ..." quruluşu.', 'It was John who broke the window. / What I need is a long vacation.', 'B2', 7],
-  ['Ellipsis', 'Cümlədəki təkrarlanan sözlərin atılması. Danışıq dilində çox istifadə olunur.', 'Some people prefer tea, others prefer coffee. / She likes it, I don\'t.', 'B2', 8],
+  ['Modal Deduction (Past)', 'Keçmişlə bağlı ehtimallar. Must have (etməli idi), might have (bəlkə etdi), can not have (mümkün deyil ki edib).', 'She must have left early. / He can not have done that, he was with me.', 'B2', 6],
+  ['Cleft Sentences', 'Cümlənin müəyyən hissəsinə vurğu etmək üçün istifadə olunur. It is/was ... that/who ... quruluşu.', 'It was John who broke the window. / What I need is a long vacation.', 'B2', 7],
+  ['Ellipsis', 'Cümlədəki təkrarlanan sözlərin atılması. Danışıq dilində çox istifadə olunur.', 'Some people prefer tea, others prefer coffee. / She likes it, I do not.', 'B2', 8],
   ['Participle Clauses', 'Feli sifətlər ilə qurulan qısa cümlələr. Zaman və səbəb bildirə bilər.', 'Seeing the accident, she called the police. / Built in 1990, the house is very old.', 'B2', 9],
-  ['Subjunctive', 'Xəyali, vacib və ya tələb olunan vəziyyətləri bildirir. "Suggest, demand, insist" feillərindən sonra gəlir.', 'I suggest that he be there. / It is essential that she study hard.', 'B2', 10],
+  ['Subjunctive', 'Xəyali, vacib və ya tələb olunan vəziyyətləri bildirir. Suggest, demand, insist feillərindən sonra gəlir.', 'I suggest that he be there. / It is essential that she study hard.', 'B2', 10],
 
   // C1 Qaydaları
   ['Causative', 'Başqasına bir iş etdirən zaman istifadə olunur. Have/Get + Object + V3 (etdirirəm) və ya Have + Object + V1 (etdirirəm).', 'I had my car repaired. / She got him to sign the paper.', 'C1', 1],
-  ['Advanced Inversion', 'İnversiyanın daha mürəkkəb formaları. "Not only", "Only when", "Under no circumstances" kimi ifadələrlə başlayanda.', 'Not only did he apologize, but he also paid for the damage. / Only when I saw her did I realize.', 'C1', 2],
-  ['Emphasis Structures', 'Vurğu üçün xüsusi quruluşlar. "Do" feilindən istifadə edərək feilə vurğu etmək.', 'I do believe you. / She does work hard. / He did tell you about it.', 'C1', 3],
+  ['Advanced Inversion', 'İnversiyanın daha mürəkkəb formaları. Not only, Only when, Under no circumstances kimi ifadələrlə başlayanda.', 'Not only did he apologize, but he also paid for the damage. / Only when I saw her did I realize.', 'C1', 2],
+  ['Emphasis Structures', 'Vurğu üçün xüsusi quruluşlar. Do feilindən istifadə edərək feilə vurğu etmək.', 'I do believe you. / She does work hard. / He did tell you about it.', 'C1', 3],
   ['Complex Noun Phrases', 'Mürəkkəb isim ifadələri. Bir çox sifət və əlavələrlə genişləndirilmiş isimlər.', 'The highly intelligent, incredibly motivated student passed the exam.', 'C1', 4],
   ['Discourse Markers', 'Nitqi və ya mətni bağlayan, ardıcıllığı bildirən ifadələr (moreover, nevertheless, consequently).', 'The weather was bad; nevertheless, we went out. / He studied hard, consequently, he passed.', 'C1', 5],
   ['Hedging', 'Sözləri yumşaltmaq və ya ehtimal bildirmək üçün istifadə olunan ifadələr. Elmi və akademik yazıda vacibdir.', 'It seems that he is right. / There might be a slight problem.', 'C1', 6],
   ['Cohesion', 'Mətndəki fikirlərin bir-biri ilə əlaqəli və axıcı olması. Bağlayıcı sözlər və əvəzliklər istifadə olunur.', 'Despite the rain, we played. However, we got wet. Because of this, we went home.', 'C1', 7],
-  ['Register Shifts',<arg_value>Formal və informal danışıq üslubları arasında keçid. Situasiyaya görə dilin səviyyəsini dəyişmək.', 'Could you possibly assist me? (Formal) / Can you help me? (Informal).', 'C1', 8],
+  ['Register Shifts', 'Formal və informal danışıq üslubları arasında keçid. Situasiyaya görə dilin səviyyəsini dəyişmək.', 'Could you possibly assist me? (Formal) / Can you help me? (Informal).', 'C1', 8],
   ['Advanced Modals', 'Modal feillərin daha mürəkkəb və incə mənaları. Should have (etməli idi amma etmədi), ought to (etməli), etc.', 'You should have told me earlier. / She ought to be here by now.', 'C1', 9],
   ['Conditionals (Mixed)', 'Qarışıq şərti cümlələr. Keçmiş şərt indiki nəticə verir və ya əksinə.', 'If I had studied harder, I would be rich now. / If I were taller, I would have become a basketball player.', 'C1', 10]
 ];
@@ -178,16 +178,19 @@ const rules = [
 // AVTOMATİK 500 SUAL GENERATORU (Hər söz üçün real variantlarla)
 const questions = [];
 for (let i = 0; i < rawWords.length; i++) {
-  const [word, trans, level, cat] = rawWords[i];
+  const word = rawWords[i][0];
+  const trans = rawWords[i][1];
+  const level = rawWords[i][2];
+  const cat = rawWords[i][3];
   
   // Eyni səviyyədəki digər sözləri tapırıq ki, yanlış variantlar real olsun
   const wrongs = rawWords.filter(w => w[2] === level && w[1] !== trans).sort(() => Math.random() - 0.5);
   
   const options = [
     trans,
-    wrongs[0][1],
-    wrongs[1][1],
-    wrongs[2][1]
+    wrongs[0] ? wrongs[0][1] : 'Yanlış 1',
+    wrongs[1] ? wrongs[1][1] : 'Yanlış 2',
+    wrongs[2] ? wrongs[2][1] : 'Yanlış 3'
   ].sort(() => Math.random() - 0.5); // Cavabları qarışdıraq
 
   const correctLetter = String.fromCharCode(65 + options.indexOf(trans));
@@ -197,12 +200,6 @@ for (let i = 0; i < rawWords.length; i++) {
   
   questions.push(['word_quiz', qText, optsStr, correctLetter, exp, level, cat]);
 }
-
-// 50 qayda sualı əlavə edək
-rules.forEach(r => {
-  const opts = JSON.stringify([`A) ${r[0]}`, `B) ${r[0]}`, `C) ${r[0]}`, `D) ${r[0]}`]);
-  questions.push(['rule_quiz', `Which rule is being used here?`, opts, 'A', `Rule: ${r[0]}`, r[3], 'grammar']);
-});
 
 async function seed() {
   try {
@@ -214,11 +211,11 @@ async function seed() {
     const ruleValues = rules.map(r => [r[0], r[1], r[2], r[3], r[4]]);
     await pool.query('INSERT IGNORE INTO rules (title, content, example, level, sequence_number) VALUES ?', [ruleValues]);
     
-    console.log('550 Sual yoxlanılır və əlavə edilir...');
-    const questionValues = questions.map(q => [q[0], q[1], JSON.stringify(q[2]), q[3], q[4], q[5], q[6]]);
+    console.log('500 Sual yoxlanılır və əlavə edilir...');
+    const questionValues = questions.map(q => [q[0], q[1], q[2], q[3], q[4], q[5], q[6]]);
     await pool.query('INSERT IGNORE INTO questions (type, question_text, options, correct_answer, explanation, level, category) VALUES ?', [questionValues]);
     
-    console.log('Seed prosesi uğurla tamamlandı! Cəmi 500 söz, 50 qayda, 550 sual əlavə edildi.');
+    console.log('Seed prosesi uğurla tamamlandı! Cəmi 500 söz, 50 qayda, 500 sual əlavə edildi.');
     process.exit(0);
   } catch (err) {
     console.error('Seed error:', err.message);
