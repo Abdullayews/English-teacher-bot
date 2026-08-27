@@ -114,7 +114,6 @@ const words = rawWords.map(w => ({ word: w[0], translation: w[1], level: w[2], c
 
 // REAL VƏ DƏRİN İZAHLI 50 QAYDA
 const rules = [
-  // A1 Qaydaları
   ['Present Simple', 'Hər gün təkrarlanan vərdişləri, ümumi həqiqətləri bildirir. Feilin birinci forması (V1) istifadə olunur. He, she, it üçün sonuna -s artırılır. Sual üçün Do/Does istifadə olunur.', 'She plays tennis every weekend. / Water boils at 100 degrees.', 'A1', 1],
   ['Verb To Be (am/is/are)', 'Şəxsiyyət, yer, yaş, vəziyyət və peşə bildirmək üçün istifadə olunur. I ilə am, he/she/it ilə is, we/you/they ilə are gəlir. Mənfi formada not artırılır.', 'They are students. / I am 25 years old. / She is not here.', 'A1', 2],
   ['Articles (a/an/the)', 'Tək sayılan isimlərdə istifadə olunur. A sait səslə başlamayan sözlərdən əvvəl, an sait səslə başlayan sözlərdən əvvəl gəlir. The isə xüsusi və ya əvvəldən xatırladılan obyektlər üçün istifadə olunur.', 'I have a cat. The cat is white. / I have an apple.', 'A1', 3],
@@ -126,7 +125,6 @@ const rules = [
   ['Imperatives', 'Əmr, xahiş və ya məsləhət bildirmək üçün istifadə olunur. Subyektsiz feilin birinci forması ilə düzəlir. Mənfi forması Do not ilə başlayır.', 'Open the door, please. / Do not touch that!', 'A1', 9],
   ['Question Words (What/Where/When)', 'Sual sözləri. What nəyi, Where haranı, When isə vaxtı soruşmaq üçün istifadə olunur.', 'What is your name? / Where do you live? / When is your birthday?', 'A1', 10],
 
-  // A2 Qaydaları
   ['Past Simple', 'Keçmişdə baş verib tamamlanmış hərəkətləri bildirir. Düzgün feillər -ed qəbul edir, qeyri-sadiqlərin xüsusi forması var (go-went). Sual üçün Did istifadə olunur.', 'I visited my grandparents last week. / She did not go to school yesterday.', 'A2', 1],
   ['Be going to', 'Gələcəkdə edilməsi planlanan və ya baş verməsi qaçınılmaz olan hərəkətləri bildirir.', 'I am going to read a book tonight. / Look at those clouds, it is going to rain.', 'A2', 2],
   ['Comparatives & Superlatives', 'Müqayisə üçün qısa sözlərə -er/-est, uzun sözlərə isə more/the most artırılır. Müqayisədə than istifadə olunur.', 'My car is faster than yours. / She is the most intelligent person in the class.', 'A2', 3],
@@ -138,7 +136,6 @@ const rules = [
   ['Present Perfect (ever/never)', 'Həyat təcrübəsini bildirmək üçün istifadə olunur. Have/Has + V3 quruluşu var. Ever suallarda, never isə mənfi cümlələrdə istifadə olunur.', 'Have you ever been to Rome? / I have never seen such a beautiful place.', 'A2', 9],
   ['Modal Verbs (must/must not)', 'Məcburiyyət və qadağa bildirir. Must etməli olduğunu, must not isə etməməli olduğunu bildirir.', 'You must wear a seatbelt in the car. / You must not smoke here.', 'A2', 10],
 
-  // B1 Qaydaları
   ['Present Perfect vs Past Simple', 'Present Perfect keçmişdə baş verib indi təsiri olan hərəkətləri, Past Simple isə tam bitmiş və vaxtı dəqiq bilinən hərəkətləri bildirir.', 'I have lost my keys (I can not open the door now). / I lost my keys yesterday.', 'B1', 1],
   ['Conditionals (Type 1)', 'Gələcəkdə mümkün olan şərti hərəkətləri bildirir. Quruluşu: If + Present Simple, Future Simple.', 'If it rains tomorrow, I will stay at home.', 'B1', 2],
   ['Passive Voice', 'İşin kim tərəfindən edildiyindən çox, işin görüldüyünə diqqət çəkmək üçün istifadə olunur. To Be + V3 ilə düzəlir.', 'The book was written by him. / The house is being painted right now.', 'B1', 3],
@@ -150,7 +147,6 @@ const rules = [
   ['Reported Speech (Statements)', 'Başqasının dediyini dolayı yolla çatdırır. Feillər bir gerilik dərəcəsi geri çəkilir.', 'He said he was tired. / She told me that she would call me.', 'B1', 9],
   ['Modal Verbs of Deduction', 'Ehtimal bildirən modal feillər. Must (mütləq), might/could (bəlkə), can not (mümkün deyil).', 'He must be at home (the lights are on). / She can not be tired, she slept 10 hours.', 'B1', 10],
 
-  // B2 Qaydaları
   ['Conditionals (Type 2 & 3)', 'Type 2: Həqiqətə zidd olan indiki və ya gələcək vəziyyət (If + Past, would). Type 3: Keçmişdə baş verməmiş hərəkət (If + Past Perfect, would have).', 'If I were you, I would buy that car. / If I had studied, I would have passed.', 'B2', 1],
   ['Passive Voice (All Tenses)', 'Passiv quruluşun bütün zamanlarda istifadəsi. Məsələn: Present Continuous Passive (is being done), Future Passive (will be done).', 'The project is being discussed right now. / The letter will be sent tomorrow.', 'B2', 2],
   ['Reported Speech (Questions & Commands)', 'Dolayı nitqdə suallar və əmrlər. Sual cümlələri if/whether ilə bağlanır, əmrlər isə told to ilə verilir.', 'She asked if I had seen the movie. / He told me to close the door.', 'B2', 3],
@@ -162,7 +158,6 @@ const rules = [
   ['Participle Clauses', 'Feli sifətlər ilə qurulan qısa cümlələr. Zaman və səbəb bildirə bilər.', 'Seeing the accident, she called the police. / Built in 1990, the house is very old.', 'B2', 9],
   ['Subjunctive', 'Xəyali, vacib və ya tələb olunan vəziyyətləri bildirir. Suggest, demand, insist feillərindən sonra gəlir.', 'I suggest that he be there. / It is essential that she study hard.', 'B2', 10],
 
-  // C1 Qaydaları
   ['Causative', 'Başqasına bir iş etdirən zaman istifadə olunur. Have/Get + Object + V3 (etdirirəm) və ya Have + Object + V1 (etdirirəm).', 'I had my car repaired. / She got him to sign the paper.', 'C1', 1],
   ['Advanced Inversion', 'İnversiyanın daha mürəkkəb formaları. Not only, Only when, Under no circumstances kimi ifadələrlə başlayanda.', 'Not only did he apologize, but he also paid for the damage. / Only when I saw her did I realize.', 'C1', 2],
   ['Emphasis Structures', 'Vurğu üçün xüsusi quruluşlar. Do feilindən istifadə edərək feilə vurğu etmək.', 'I do believe you. / She does work hard. / He did tell you about it.', 'C1', 3],
@@ -175,15 +170,72 @@ const rules = [
   ['Conditionals (Mixed)', 'Qarışıq şərti cümlələr. Keçmiş şərt indiki nəticə verir və ya əksinə.', 'If I had studied harder, I would be rich now. / If I were taller, I would have become a basketball player.', 'C1', 10]
 ];
 
-// AVTOMATİK 500 SUAL GENERATORU (Hər söz üçün real variantlarla)
-const questions = [];
+// 50 QAYDA SUALI
+const ruleQuestions = [
+  ['rule_quiz', 'She ___ tennis every weekend.', '["A) play", "B) plays", "C) playing", "D) is playing"]', 'B', 'Present Simple: He, she, it üçün feilin sonuna -s artırılır.', 'A1', 'grammar'],
+  ['rule_quiz', 'They ___ students.', '["A) am", "B) is", "C) are", "D) be"]', 'C', 'Verb To Be: They ilə are gəlir.', 'A1', 'grammar'],
+  ['rule_quiz', 'I have ___ apple in my bag.', '["A) a", "B) an", "C) the", "D) -"]', 'B', 'Articles: Saitlə başlayan sözün qarşısında an istifadə olunur.', 'A1', 'grammar'],
+  ['rule_quiz', '___ is your name?', '["A) Where", "B) When", "C) What", "D) Who"]', 'C', 'Question Words: Ad soruşulanda What istifadə olunur.', 'A1', 'grammar'],
+  ['rule_quiz', 'There ___ a book on the table.', '["A) is", "B) are", "C) am", "D) be"]', 'A', 'There is/are: Tək obyekt üçün is istifadə olunur.', 'A1', 'grammar'],
+  ['rule_quiz', 'I ___ swim very well.', '["A) am", "B) do", "C) can", "D) have"]', 'C', 'Can/Can not: Qabiliyyət bildirmək üçün modal feil.', 'A1', 'grammar'],
+  ['rule_quiz', 'The cat is ___ the box.', '["A) in", "B) on", "C) at", "D) by"]', 'A', 'Prepositions: İçində olmaq üçün in istifadə olunur.', 'A1', 'grammar'],
+  ['rule_quiz', 'She ___ got a new phone.', '["A) have", "B) has", "C) is", "D) does"]', 'B', 'Have got/Has got: He, she, it üçün has istifadə olunur.', 'A1', 'grammar'],
+  ['rule_quiz', '___ the door, please!', '["A) Opens", "B) Opened", "C) Open", "D) Opening"]', 'C', 'Imperatives: Əmr cümləsində feilin birinci forması istifadə olunur.', 'A1', 'grammar'],
+  ['rule_quiz', 'He is my friend. ___ is playing outside.', '["A) He", "B) Him", "C) His", "D) She"]', 'A', 'Subject Pronouns: Subyekt kimi istifadə olunur.', 'A1', 'grammar'],
+
+  ['rule_quiz', 'I ___ my grandparents last week.', '["A) visit", "B) visits", "C) visited", "D) visiting"]', 'C', 'Past Simple: Last week keçmiş zaman tələb edir.', 'A2', 'grammar'],
+  ['rule_quiz', 'Look at those clouds, it ___ going to rain.', '["A) is", "B) are", "C) am", "D) will"]', 'A', 'Be going to: Tək subyekt üçün is istifadə olunur.', 'A2', 'grammar'],
+  ['rule_quiz', 'My car is ___ than yours.', '["A) fast", "B) faster", "C) fastest", "D) the fastest"]', 'B', 'Comparatives: İki şeyi müqayisə edirik.', 'A2', 'grammar'],
+  ['rule_quiz', 'She ___ a book right now.', '["A) read", "B) reads", "C) is reading", "D) readed"]', 'C', 'Present Continuous: Right now indiki zamanı tələb edir.', 'A2', 'grammar'],
+  ['rule_quiz', 'I ___ like a cup of tea.', '["A) am", "B) do", "C) would", "D) want"]', 'C', 'Would like: Nəzakətli istək.', 'A2', 'grammar'],
+  ['rule_quiz', 'Is there ___ milk?', '["A) some", "B) any", "C) a", "D) the"]', 'B', 'Some/Any: Suallarda any istifadə olunur.', 'A2', 'grammar'],
+  ['rule_quiz', 'I ___ wake up early.', '["A) always", "B) never", "C) usually", "D) sometimes"]', 'A', 'Adverbs of Frequency: Tezlik zərfi.', 'A2', 'grammar'],
+  ['rule_quiz', 'I called ___ yesterday.', '["A) he", "B) him", "C) his", "D) she"]', 'B', 'Object Pronouns: Obyekt kimi him istifadə olunur.', 'A2', 'grammar'],
+  ['rule_quiz', 'Have you ___ been to Rome?', '["A) never", "B) ever", "C) already", "D) yet"]', 'B', 'Present Perfect: Suallarda ever istifadə olunur.', 'A2', 'grammar'],
+  ['rule_quiz', 'You ___ wear a seatbelt in the car.', '["A) must", "B) must not", "C) can", "D) could"]', 'A', 'Modals: Məcburiyyət bildirir.', 'A2', 'grammar'],
+
+  ['rule_quiz', 'I ___ my keys, so I can not open the door now.', '["A) lost", "B) have lost", "C) lose", "D) losing"]', 'B', 'Present Perfect vs Past Simple: İndi təsiri olduğu üçün Present Perfect.', 'B1', 'grammar'],
+  ['rule_quiz', 'If it ___ tomorrow, I will stay home.', '["A) rain", "B) rains", "C) rained", "D) will rain"]', 'B', 'Conditionals 1: If şərtində Present Simple.', 'B1', 'grammar'],
+  ['rule_quiz', 'The book ___ written by him.', '["A) is", "B) was", "C) did", "D) has"]', 'B', 'Passive Voice: Keçmiş zaman passivi.', 'B1', 'grammar'],
+  ['rule_quiz', 'I ___ play football when I was a child.', '["A) use to", "B) used to", "C) am used to", "D) using"]', 'B', 'Used to: Keçmiş vərdiş.', 'B1', 'grammar'],
+  ['rule_quiz', 'The man ___ lives next door is a doctor.', '["A) which", "B) who", "C) where", "D) what"]', 'B', 'Relative Clauses: İnsanlar üçün who.', 'B1', 'grammar'],
+  ['rule_quiz', 'I enjoy ___ books.', '["A) read", "B) to read", "C) reading", "D) reads"]', 'C', 'Gerunds: Enjoy feilindən sonra ing forma gəlir.', 'B1', 'grammar'],
+  ['rule_quiz', 'I ___ studying for 3 hours.', '["A) have", "B) has been", "C) have been", "D) am"]', 'C', 'Present Perfect Continuous: Have been + ing.', 'B1', 'grammar'],
+  ['rule_quiz', 'Please, look ___ for her keys.', '["A) up", "B) out", "C) for", "D) in"]', 'C', 'Phrasal Verbs: Axtarmaq üçün look for.', 'B1', 'grammar'],
+  ['rule_quiz', 'He said he ___ tired.', '["A) is", "B) was", "C) were", "D) be"]', 'B', 'Reported Speech: Present Simple keçmişə çevrilir.', 'B1', 'grammar'],
+  ['rule_quiz', 'He ___ be at home, the lights are on.', '["A) must", "B) can not", "C) might", "D) could"]', 'A', 'Modal Deduction: Mütləq belədir.', 'B1', 'grammar'],
+
+  ['rule_quiz', 'If I ___ you, I would buy that car.', '["A) am", "B) was", "C) were", "D) be"]', 'C', 'Conditionals 2: To be feili üçün were istifadə olunur.', 'B2', 'grammar'],
+  ['rule_quiz', 'The project ___ discussed right now.', '["A) is", "B) is being", "C) was", "D) has been"]', 'B', 'Passive Voice: Present Continuous Passive.', 'B2', 'grammar'],
+  ['rule_quiz', 'She asked if I ___ seen the movie.', '["A) have", "B) has", "C) had", "D) was"]', 'C', 'Reported Speech: Present Perfect keçmişə çevrilir.', 'B2', 'grammar'],
+  ['rule_quiz', 'My brother, ___ lives in London, is a doctor.', '["A) who", "B) which", "C) that", "D) whose"]', 'A', 'Relative Clauses: Qeyri-təyinedici vergüllü cümlədə who.', 'B2', 'grammar'],
+  ['rule_quiz', 'Never ___ I seen such a beautiful sunset.', '["A) I have", "B) have I", "C) I saw", "D) did I"]', 'B', 'Inversion: Mənfi söz cümlə başında olanda feil tərsinə çevrilir.', 'B2', 'grammar'],
+  ['rule_quiz', 'She ___ have left early.', '["A) must", "B) might", "C) can not", "D) could not"]', 'A', 'Modal Deduction (Past): Güclü ehtimal.', 'B2', 'grammar'],
+  ['rule_quiz', 'It was John ___ broke the window.', '["A) who", "B) which", "C) what", "D) whose"]', 'A', 'Cleft Sentences: Vurğu üçün.', 'B2', 'grammar'],
+  ['rule_quiz', 'Some people prefer tea, ___ prefer coffee.', '["A) another", "B) others", "C) other", "D) the others"]', 'B', 'Ellipsis: Təkrardan qaçmaq.', 'B2', 'grammar'],
+  ['rule_quiz', '___ the accident, she called the police.', '["A) See", "B) Saw", "C) Seeing", "D) Seen"]', 'C', 'Participle Clauses: Eyni vaxtda baş verən hadisə.', 'B2', 'grammar'],
+  ['rule_quiz', 'I suggest that he ___ there.', '["A) is", "B) be", "C) was", "D) goes"]', 'B', 'Subjunctive: Xəyali vəziyyət.', 'B2', 'grammar'],
+
+  ['rule_quiz', 'I had my car ___.', '["A) repair", "B) repairing", "C) repaired", "D) to repair"]', 'C', 'Causative: Başqasına etdirmək.', 'C1', 'grammar'],
+  ['rule_quiz', 'Not only ___ he apologize, but he also paid.', '["A) did", "B) does", "C) was", "D) had"]', 'A', 'Advanced Inversion: Not only ilə başlayanda köməkçi feil.', 'C1', 'grammar'],
+  ['rule_quiz', 'I ___ believe you.', '["A) do", "B) am", "C) have", "D) will"]', 'A', 'Emphasis Structures: Do feili ilə vurğu.', 'C1', 'grammar'],
+  ['rule_quiz', 'The weather was bad; ___, we went out.', '["A) despite", "B) although", "C) nevertheless", "D) however"]', 'C', 'Discourse Markers: Əlaqələndirici söz.', 'C1', 'grammar'],
+  ['rule_quiz', 'It ___ that he is right.', '["A) seems", "B) must", "C) is", "D) definitely"]', 'A', 'Hedging: Ehtimal bildirmək.', 'C1', 'grammar'],
+  ['rule_quiz', '___ the rain, we played.', '["A) Despite", "B) Although", "C) Because", "D) However"]', 'A', 'Cohesion: Bağlayıcı söz.', 'C1', 'grammar'],
+  ['rule_quiz', 'Could you possibly assist me? This is a ___ register.', '["A) formal", "B) informal", "C) neutral", "D) casual"]', 'A', 'Register Shifts: Rəsmi üslub.', 'C1', 'grammar'],
+  ['rule_quiz', 'You ___ have told me earlier.', '["A) should", "B) must", "C) can", "D) might"]', 'A', 'Advanced Modals: Keçmişdə edilməli olan amma edilməyən.', 'C1', 'grammar'],
+  ['rule_quiz', 'If I had studied harder, I ___ rich now.', '["A) would be", "B) would have been", "C) will be", "D) am"]', 'A', 'Mixed Conditionals: Keçmiş şərt, indiki nəticə.', 'C1', 'grammar'],
+  ['rule_quiz', 'Only when I saw her ___ I realize.', '["A) did", "B) do", "C) was", "D) had"]', 'A', 'Advanced Inversion: Only when ilə başlayanda.', 'C1', 'grammar']
+];
+
+// AVTOMATİK 500 SÖZ SUALI
+const wordQuestions = [];
 for (let i = 0; i < rawWords.length; i++) {
   const word = rawWords[i][0];
   const trans = rawWords[i][1];
   const level = rawWords[i][2];
   const cat = rawWords[i][3];
   
-  // Eyni səviyyədəki digər sözləri tapırıq ki, yanlış variantlar real olsun
   const wrongs = rawWords.filter(w => w[2] === level && w[1] !== trans).sort(() => Math.random() - 0.5);
   
   const options = [
@@ -191,15 +243,17 @@ for (let i = 0; i < rawWords.length; i++) {
     wrongs[0] ? wrongs[0][1] : 'Yanlış 1',
     wrongs[1] ? wrongs[1][1] : 'Yanlış 2',
     wrongs[2] ? wrongs[2][1] : 'Yanlış 3'
-  ].sort(() => Math.random() - 0.5); // Cavabları qarışdıraq
+  ].sort(() => Math.random() - 0.5);
 
   const correctLetter = String.fromCharCode(65 + options.indexOf(trans));
   const qText = `What is the meaning of "${word}"?`;
   const optsStr = JSON.stringify(options.map((o, idx) => `${String.fromCharCode(65 + idx)}) ${o}`));
   const exp = `"${word}" sözünün mənası "${trans}"-dir.`;
   
-  questions.push(['word_quiz', qText, optsStr, correctLetter, exp, level, cat]);
+  wordQuestions.push(['word_quiz', qText, optsStr, correctLetter, exp, level, cat]);
 }
+
+const allQuestions = [...wordQuestions, ...ruleQuestions];
 
 async function seed() {
   try {
@@ -211,11 +265,11 @@ async function seed() {
     const ruleValues = rules.map(r => [r[0], r[1], r[2], r[3], r[4]]);
     await pool.query('INSERT IGNORE INTO rules (title, content, example, level, sequence_number) VALUES ?', [ruleValues]);
     
-    console.log('500 Sual yoxlanılır və əlavə edilir...');
-    const questionValues = questions.map(q => [q[0], q[1], q[2], q[3], q[4], q[5], q[6]]);
+    console.log('550 Sual yoxlanılır və əlavə edilir...');
+    const questionValues = allQuestions.map(q => [q[0], q[1], q[2], q[3], q[4], q[5], q[6]]);
     await pool.query('INSERT IGNORE INTO questions (type, question_text, options, correct_answer, explanation, level, category) VALUES ?', [questionValues]);
     
-    console.log('Seed prosesi uğurla tamamlandı! Cəmi 500 söz, 50 qayda, 500 sual əlavə edildi.');
+    console.log('Seed prosesi uğurla tamamlandı! Cəmi 500 söz, 50 qayda, 550 sual əlavə edildi.');
     process.exit(0);
   } catch (err) {
     console.error('Seed error:', err.message);
